@@ -7,7 +7,21 @@ import * as vscode from "vscode";
  * Tests the confirmation dialog.
  */
 suite("Dialog Tests", () => {
-  const showInformationMessageStub = Sinon.stub(vscode.window, "showInformationMessage");
+  let showInformationMessageStub: Sinon.SinonStub;
+
+  /**
+   * Creates the necessary stubs before each test.
+   */
+  setup("create stubs", () => {
+    showInformationMessageStub = Sinon.stub(vscode.window, "showInformationMessage");
+  });
+
+  /**
+   * Restore all the stubs after each test.
+   */
+  teardown("restore stubs", () => {
+    showInformationMessageStub.restore();
+  });
 
   /**
    * Tests that `true` will be returned, when the button in the dialog will be pressed.

@@ -5,10 +5,5 @@ export default defineConfig({
   version: "insiders",
   mocha: {
     parallel: false,
-    rootHooks: {
-      afterAll: () => {
-        sinon.restore();
-      },
-    },
   },
 });

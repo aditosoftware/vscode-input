@@ -6,7 +6,21 @@ import * as vscode from "vscode";
  * Tests the input box dialog.
  */
 suite("InputBox Tests", () => {
-  const showInputBoxStub = Sinon.stub(vscode.window, "showInputBox").resolves();
+  let showInputBoxStub: Sinon.SinonStub;
+
+  /**
+   * Creates the necessary stubs before each test.
+   */
+  setup("create stubs", () => {
+    showInputBoxStub = Sinon.stub(vscode.window, "showInputBox").resolves();
+  });
+
+  /**
+   * Restore all the stubs after each test.
+   */
+  teardown("restore stubs", () => {
+    showInputBoxStub.restore();
+  });
 
   /**
    * Tests that a dummy title is created when no title is provided.
