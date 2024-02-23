@@ -1,32 +1,22 @@
 import { AfterInputType, BeforeInputType, DialogValues, InputBase } from "..";
 import * as vscode from "vscode";
 
-type GenerateMessage = (currentResult: DialogValues) => string;
-
 /**
  * Any confirmation dialog.
  * This dialog will be shown as a modal dialog and therefore be in the front.
  */
 export class ConfirmationDialog extends InputBase {
   /**
-   * The normal message of the dialog.
+   * Constructor.
+   *
+   * @param message - The normal message of the dialog.
+   * @param detail -  The detail message of this modal dialog. This will be dynamically generated from the other inputs.
+   * @param confirmButtonName - The name of the confirm button.
    */
-  private message: string;
-
-  /**
-   * The detail message of this modal dialog. This will be dynamically generated from the other inputs.
-   */
-  private detail: GenerateMessage;
-
-  /**
-   * The name of the confirm button.
-   */
-  private confirmButtonName: string;
-
   constructor(
-    message: string,
-    detail: GenerateMessage,
-    confirmButtonName: string,
+    private message: string,
+    private detail: (currentResult: DialogValues) => string,
+    private confirmButtonName: string,
     beforeInput?: BeforeInputType,
     afterInput?: AfterInputType
   ) {
@@ -45,9 +35,14 @@ export class ConfirmationDialog extends InputBase {
         detail: this.detail(currentResults),
         modal: true,
       },
-      this.confirmButtonName
+
+      // pack into MessageItem, because otherwise tests and mocking will not work
+      {
+        title: this.confirmButtonName,
+      }
     );
-    if (answer === this.confirmButtonName) {
+
+    if (answer?.title === this.confirmButtonName) {
       return true;
     }
   }
