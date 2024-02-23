@@ -5,15 +5,13 @@ import * as vscode from "vscode";
  * Input for any free text.
  */
 export class InputBox extends InputBase {
-
   /**
-   * Any options for the input box.
+   *Constructor.
+   * @param inputBoxOptions - Any options for the input box.
    */
-  private readonly inputBoxOptions: vscode.InputBoxOptions;
-
   constructor(
     name: string,
-    inputBoxOptions: vscode.InputBoxOptions,
+    private inputBoxOptions: vscode.InputBoxOptions,
     beforeInput?: BeforeInputType,
     afterInput?: AfterInputType
   ) {
@@ -35,7 +33,7 @@ export class InputBox extends InputBase {
       options.title += ` ${stepOutput}`;
     } else {
       // fallback, if no title was given
-      options.title = `Choose a value - ${stepOutput}`;
+      options.title = `Choose a value ${stepOutput}`;
     }
 
     return await vscode.window.showInputBox(options);
