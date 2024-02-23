@@ -11,12 +11,11 @@ export const folderSelectionName = "folderSelection";
  */
 export class OpenDialog extends InputBase {
   /**
-   * Any options for the open dialog
+   * Constructor.
+   * @param openDialogOptions -  Any options for the open dialog
    */
-  private readonly openDialogOptions: vscode.OpenDialogOptions;
-
   constructor(
-    openDialogOptions: vscode.OpenDialogOptions,
+    private openDialogOptions: vscode.OpenDialogOptions,
     name: string = folderSelectionName,
     beforeInput?: BeforeInputType,
     afterInput?: AfterInputType
@@ -37,11 +36,11 @@ export class OpenDialog extends InputBase {
     if (options.title) {
       options.title += ` ${stepOutput}`;
     } else {
-      options.title = `Select a ${options.canSelectFolders ? "Directory" : "File"} - ${stepOutput}`;
+      options.title = `Select a ${options.canSelectFolders ? "Directory" : "File"} ${stepOutput}`;
     }
 
     return await vscode.window.showOpenDialog(options).then((uri) => {
-      if (uri) {
+      if (uri && uri.length !== 0) {
         // get from any uri the fileSystem path
         return uri.map((pElement) => pElement.fsPath);
       }
