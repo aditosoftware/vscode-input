@@ -6,7 +6,7 @@ import * as vscode from "vscode";
 /**
  * Tests the confirmation dialog.
  */
-suite("Dialog Tests", () => {
+suite("ConfirmationDialog Tests", () => {
   let showInformationMessageStub: Sinon.SinonStub;
 
   /**
