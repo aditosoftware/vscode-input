@@ -33,25 +33,17 @@ export interface QuickPickItems {
  */
 export class QuickPick extends InputBase {
   /**
-   * The title of the quick pick.
+   * Constructor.
+   *
+   * @param title - The title of the quick pick.
+   * @param generateItems - Any function to generate the items for the quick pick. This can be a sync or async function.
+   * @param allowMultiple - Option, if multiple elements are allowed. If no value present, then only one element is allowed.
    */
-  protected title: string;
-
-  /**
-   * Option, if multiple elements are allowed.
-   * If no value present, then only one element is allowed.
-   */
-  protected allowMultiple?: boolean;
-  /**
-   * Any function to generate the items for the quick pick. This can be a sync or async function.
-   */
-  protected generateItems: QuickPickItemFunction;
-
   constructor(
     name: string,
-    title: string,
-    generateItems: QuickPickItemFunction,
-    allowMultiple?: boolean,
+    protected title: string,
+    protected generateItems: QuickPickItemFunction,
+    protected allowMultiple?: boolean,
     beforeInput?: BeforeInputType,
     afterInput?: AfterInputType
   ) {
@@ -127,7 +119,7 @@ export class QuickPick extends InputBase {
     if (pAdditionalTitle) {
       generatedTitle += ` (${pAdditionalTitle})`;
     }
-    generatedTitle += ` -  ${this.generateStepOutput(currentStep, maximumStep)}`;
+    generatedTitle += ` - ${this.generateStepOutput(currentStep, maximumStep)}`;
     return generatedTitle;
   }
 
