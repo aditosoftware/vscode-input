@@ -2,8 +2,6 @@ import * as vscode from "vscode";
 import Sinon from "sinon";
 import { DialogValues, OpenDialog } from "../../src";
 import assert from "assert";
-import path from "path";
-import os from "os";
 
 suite("OpenDialog tests", () => {
   let showOpenDialogStub: Sinon.SinonStub;
