@@ -61,15 +61,15 @@ suite("LoadingQuickPick tests", () => {
   test("should handle hide correctly", async () => {
     createQuickPick.returns(quickPickWithHide);
 
-    const loadingQuickPick = new LoadingQuickPick(
-      "loadingQuickPick",
-      "My title",
-      "My loading title",
-      () => [{ label: "normal item" }],
-      () => [{ label: "reload item" }],
-      "my reload tooltip",
-      true
-    );
+    const loadingQuickPick = new LoadingQuickPick({
+      name: "loadingQuickPick",
+      title: "My title",
+      loadingTitle: "My loading title",
+      generateItems: () => [{ label: "normal item" }],
+      reloadItems: () => [{ label: "reload item" }],
+      reloadTooltip: "my reload tooltip",
+      allowMultiple: true,
+    });
 
     const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 
@@ -171,15 +171,15 @@ suite("LoadingQuickPick tests", () => {
     test("should create correctly with allow multiple", async () => {
       createQuickPick.returns(quickPickWithAccept);
 
-      const loadingQuickPick = new LoadingQuickPick(
-        "loadingQuickPick",
-        "My title",
-        "My loading title",
-        () => [{ label: "normal item" }],
-        () => [{ label: "reload item" }],
-        "my reload tooltip",
-        true
-      );
+      const loadingQuickPick = new LoadingQuickPick({
+        name: "loadingQuickPick",
+        title: "My title",
+        loadingTitle: "My loading title",
+        generateItems: () => [{ label: "normal item" }],
+        reloadItems: () => [{ label: "reload item" }],
+        reloadTooltip: "my reload tooltip",
+        allowMultiple: true,
+      });
 
       const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 
@@ -241,14 +241,14 @@ suite("LoadingQuickPick tests", () => {
       // trigger method for reload button press
       const onDidTriggerButtonStub = Sinon.stub(quickPickWithAccept, "onDidTriggerButton");
 
-      const loadingQuickPick = new LoadingQuickPick(
-        "loadingQuickPick",
-        "My title",
-        "My loading title",
-        () => [{ label: "normal item" }],
-        () => [{ label: "reload item" }],
-        "my reload tooltip"
-      );
+      const loadingQuickPick = new LoadingQuickPick({
+        name: "loadingQuickPick",
+        title: "My title",
+        loadingTitle: "My loading title",
+        generateItems: () => [{ label: "normal item" }],
+        reloadItems: () => [{ label: "reload item" }],
+        reloadTooltip: "my reload tooltip",
+      });
 
       const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 

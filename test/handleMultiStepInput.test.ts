@@ -1,5 +1,5 @@
 import assert from "assert";
-import { DialogValues, InputBase, InputBox, handleMultiStepInput } from "../src";
+import { DialogValues, InputBase, InputBaseOptions, InputBox, handleMultiStepInput } from "../src";
 import Sinon from "sinon";
 import * as vscode from "vscode";
 import path from "path";
@@ -49,10 +49,14 @@ suite("handleMultiStepInput test", () => {
     debugLog = Sinon.spy(Logger.getLogger(), "debug");
 
     // creates some test elements from the inputs
-    firstElement = new TestElement(new InputBox("firstElement", {}));
-    secondElement = new TestElement(new InputBox("secondElement", {}));
-    beforeInputTrue = new TestElement(new InputBox("beforeInputTrue", {}, () => true));
-    beforeInputFalse = new TestElement(new InputBox("beforeInputFalse", {}, () => false));
+    firstElement = new TestElement(new InputBox({ name: "firstElement", inputBoxOptions: {} }));
+    secondElement = new TestElement(new InputBox({ name: "secondElement", inputBoxOptions: {} }));
+    beforeInputTrue = new TestElement(
+      new InputBox({ name: "beforeInputTrue", inputBoxOptions: {}, beforeInput: () => true })
+    );
+    beforeInputFalse = new TestElement(
+      new InputBox({ name: "beforeInputFalse", inputBoxOptions: {}, beforeInput: () => false })
+    );
   });
 
   /**
@@ -212,8 +216,12 @@ suite("handleMultiStepInput test", () => {
 
     let afterInput: Map<string, string[]> = new Map<string, string[]>();
 
-    const inputBox = new InputBox(name, {}, undefined, (dialogValues: DialogValues) => {
-      afterInput = dialogValues.inputValues;
+    const inputBox = new InputBox({
+      name: name,
+      inputBoxOptions: {},
+      afterInput: (dialogValues: DialogValues) => {
+        afterInput = dialogValues.inputValues;
+      },
     });
     const showDialogStub = Sinon.stub(inputBox, "showDialog").resolves(myValue);
 
@@ -274,14 +282,14 @@ suite("handleMultiStepInput test", () => {
  */
 class TestElement {
   /**
-   * The name of the input. This is also `input.name`.
+   * The name of the input. This is also `input.inputOptions.name`.
    */
   name: string;
 
   /**
    * The input element that should be used for this test.
    */
-  input: InputBase;
+  input: InputBase<InputBaseOptions>;
 
   /**
    * The stub of the method `showDialog`. This will be created in the constructor.
@@ -293,9 +301,9 @@ class TestElement {
    * Creates and extracts all relevant elements for a test element.
    * @param input - the input
    */
-  constructor(input: InputBase) {
+  constructor(input: InputBase<InputBaseOptions>) {
     this.input = input;
-    this.name = input.name;
+    this.name = input.inputOptions.name;
     this.showDialogStub = Sinon.stub(input, "showDialog");
   }
 

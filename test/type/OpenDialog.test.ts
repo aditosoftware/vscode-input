@@ -26,7 +26,7 @@ suite("OpenDialog tests", () => {
   test("should create correct title when no option given (file selection)", async () => {
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({});
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: {} });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
 
@@ -42,7 +42,7 @@ suite("OpenDialog tests", () => {
   test("should create correct title when no option given (folder selection)", async () => {
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({ canSelectFolders: true });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { canSelectFolders: true } });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
 
@@ -61,7 +61,7 @@ suite("OpenDialog tests", () => {
   test("should use existing title", async () => {
     showOpenDialogStub.resolves([]);
 
-    const openDialog = new OpenDialog({ title: "my title" });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
 
@@ -79,15 +79,18 @@ suite("OpenDialog tests", () => {
     showOpenDialogStub.resolves([]);
 
     const openDialog = new OpenDialog({
-      title: "my title",
-      canSelectFiles: true,
-      canSelectFolders: true,
-      canSelectMany: true,
-      defaultUri: vscode.Uri.parse("a"),
-      filters: {
-        Images: ["png", "jpg"],
+      name: "openDialog",
+      openDialogOptions: {
+        title: "my title",
+        canSelectFiles: true,
+        canSelectFolders: true,
+        canSelectMany: true,
+        defaultUri: vscode.Uri.parse("a"),
+        filters: {
+          Images: ["png", "jpg"],
+        },
+        openLabel: "My open button",
       },
-      openLabel: "My open button",
     });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
@@ -116,7 +119,7 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves([uri]);
 
-    const openDialog = new OpenDialog({ title: "my title" });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
 
@@ -138,7 +141,7 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves([uriA, uriB, uriC]);
 
-    const openDialog = new OpenDialog({ title: "my title" });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
 
     const result = await openDialog.showDialog(new DialogValues(), 2, 4);
 

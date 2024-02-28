@@ -1,15 +1,14 @@
 import assert from "assert";
-import { DialogValues, InputBox } from "../src";
+import { DialogValues } from "../src";
 
 /**
  * Tests that the adding of the dialog values works.
  */
 suite("DialogValues test", () => {
-  const name = "myName";
   /**
-   * any input for tests. Only relevant element is the name.
+   * The name for any input value.
    */
-  const inputBase = new InputBox(name, {});
+  const name = "myName";
 
   /**
    * Tests that a normal string value can be added.
@@ -19,7 +18,7 @@ suite("DialogValues test", () => {
 
     const dialogValues = new DialogValues();
 
-    dialogValues.addValue(inputBase, myValue);
+    dialogValues.addValue(name, myValue);
 
     assert.strictEqual(undefined, dialogValues.confirmation);
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), dialogValues.inputValues);
@@ -33,7 +32,7 @@ suite("DialogValues test", () => {
 
     const dialogValues = new DialogValues();
 
-    dialogValues.addValue(inputBase, myValue);
+    dialogValues.addValue(name, myValue);
 
     assert.strictEqual(undefined, dialogValues.confirmation);
     assert.deepStrictEqual(new Map<string, string[]>([[name, myValue]]), dialogValues.inputValues);
@@ -50,7 +49,7 @@ suite("DialogValues test", () => {
       assert.strictEqual(undefined, dialogValues.confirmation, "no value set");
 
       // add the value
-      dialogValues.addValue(inputBase, pValue);
+      dialogValues.addValue(name, pValue);
 
       assert.strictEqual(pValue, dialogValues.confirmation);
       assert.deepStrictEqual(new Map<string, string[]>(), dialogValues.inputValues);

@@ -1,46 +1,49 @@
 import { DialogValues } from "..";
 
 /**
- * Type of the function that can be used the check, if the input should be shown or not. If the function returns `true`, then it should be shown.
- * If the function returns `false`, then the dialog will not be shown.
+ * The options of any input element.
  */
-export type BeforeInputType = (dialogValues: DialogValues) => boolean;
-
-/**
- * Type of the function that can be used to do some action after the input was shown.
- *
- * This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
- */
-export type AfterInputType = (dialogValues: DialogValues) => void;
-
-/**
- * Any input for the extension.
- */
-export abstract class InputBase {
+export interface InputBaseOptions {
   /**
    * The unique name which is needed to store the values.
    * This should be unique among all inputs from one multi-step input.
    */
   readonly name: string;
-
   /**
    * Function that should be executed before the input is shown.
    *
    * This function can be used the check, if the input should be shown or not. If the function returns `true`, then it should be shown.
+   *
+   * @param dialogValues - the current values of the dialog
+   * @returns `true` if the dialog should be shown, `false`, if this dialog should be skipped
    */
-  readonly beforeInput?: BeforeInputType;
+  readonly beforeInput?: (dialogValues: DialogValues) => boolean;
 
   /**
    * Function that should be executed after the input was shown and the new value was saved into the dialog values.
    *
    * This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
+   *
+   * @param dialogValues - the current values of the dialog
    */
-  readonly afterInput?: AfterInputType;
+  readonly afterInput?: (dialogValues: DialogValues) => void;
+}
 
-  constructor(name: string, beforeInput?: BeforeInputType, afterInput?: AfterInputType) {
-    this.name = name;
-    this.beforeInput = beforeInput;
-    this.afterInput = afterInput;
+/**
+ * Any input for the extension.
+ */
+export abstract class InputBase<T extends InputBaseOptions> {
+  /**
+   * The options of any input element.
+   */
+  inputOptions: T;
+
+  /**
+   * Constructor.
+   * @param options - the options of any input element.
+   */
+  constructor(inputOptions: T) {
+    this.inputOptions = inputOptions;
   }
 
   /**

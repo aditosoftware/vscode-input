@@ -35,11 +35,12 @@ suite("ConfirmationDialog Tests", () => {
     showInformationMessageStub.resolves(confirmButtonItem);
 
     // creates the dialog and shows it
-    const dialog = new ConfirmationDialog(
-      message,
-      (dialogValues: DialogValues) => `Detail: ${dialogValues.inputValues.size}`,
-      confirmButtonTitle
-    );
+    const dialog = new ConfirmationDialog({
+      name: "Confirmation",
+      message: message,
+      detail: (dialogValues: DialogValues) => `Detail: ${dialogValues.inputValues.size}`,
+      confirmButtonName: confirmButtonTitle,
+    });
     const result = await dialog.showDialog(new DialogValues());
 
     // checks that the showDialog returns true
@@ -61,7 +62,12 @@ suite("ConfirmationDialog Tests", () => {
   test("showDialog should return undefined when another button is selected", async () => {
     showInformationMessageStub.resolves({ title: "Cancel" });
 
-    const dialog = new ConfirmationDialog("message", () => "detail", "button");
+    const dialog = new ConfirmationDialog({
+      name: "Confirmation",
+      message: "message",
+      detail: () => "detail",
+      confirmButtonName: "button",
+    });
     const result = await dialog.showDialog(new DialogValues());
 
     assert.strictEqual(result, undefined);
@@ -73,7 +79,12 @@ suite("ConfirmationDialog Tests", () => {
   test("showDialog should return undefined when confirm button is not selected", async () => {
     showInformationMessageStub.resolves(undefined);
 
-    const dialog = new ConfirmationDialog("message", () => "detail", "button");
+    const dialog = new ConfirmationDialog({
+      name: "Confirmation",
+      message: "message",
+      detail: () => "detail",
+      confirmButtonName: "button",
+    });
     const result = await dialog.showDialog(new DialogValues());
 
     assert.strictEqual(result, undefined);

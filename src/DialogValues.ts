@@ -1,4 +1,3 @@
-import { InputBase } from ".";
 import * as vscode from "vscode";
 
 /**
@@ -25,10 +24,10 @@ export class DialogValues {
   /**
    * Adds a value to the inputValues.
    *
-   * @param input - the input which was used to get any value from the user
+   * @param inputName - the name of the input which was used to get any value from the user
    * @param result - the result given by the user
    */
-  addValue(input: InputBase, result: string | string[] | boolean) {
+  addValue(inputName: string, result: string | string[] | boolean) {
     if (typeof result === "boolean") {
       this.confirmation = result;
     } else {
@@ -41,7 +40,7 @@ export class DialogValues {
       }
 
       // and store it there
-      this.inputValues.set(input.name, elements);
+      this.inputValues.set(inputName, elements);
     }
   }
 }

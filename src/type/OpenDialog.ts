@@ -1,29 +1,20 @@
-import { DialogValues, InputBase, BeforeInputType, AfterInputType } from "..";
+import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 
 /**
- * The name that should be used for any folder selection.
+ * Any options for Open Dialogs.
  */
-export const folderSelectionName = "folderSelection";
+interface OpenDialogOptions extends InputBaseOptions {
+  /**
+   * Any vscode options for the open dialog
+   */
+  readonly openDialogOptions: vscode.OpenDialogOptions;
+}
 
 /**
  * Input for any Open Dialog (files and directory).
  */
-export class OpenDialog extends InputBase {
-  /**
-   * Constructor.
-   * @param openDialogOptions -  Any options for the open dialog
-   */
-  constructor(
-    private openDialogOptions: vscode.OpenDialogOptions,
-    name: string = folderSelectionName,
-    beforeInput?: BeforeInputType,
-    afterInput?: AfterInputType
-  ) {
-    super(name, beforeInput, afterInput);
-    this.openDialogOptions = openDialogOptions;
-  }
-
+export class OpenDialog extends InputBase<OpenDialogOptions> {
   async showDialog(
     _currentResults: DialogValues,
     currentStep: number,
@@ -32,7 +23,7 @@ export class OpenDialog extends InputBase {
     const stepOutput = this.generateStepOutput(currentStep, maximumStep);
 
     // copy the options, so they will not persist during multiple dialogs
-    const options = { ...this.openDialogOptions };
+    const options = { ...this.inputOptions.openDialogOptions };
     if (options.title) {
       options.title += ` ${stepOutput}`;
     } else {

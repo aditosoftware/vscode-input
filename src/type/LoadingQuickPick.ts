@@ -1,6 +1,27 @@
-import { AfterInputType, BeforeInputType, DialogValues, QuickPick, QuickPickItemFunction, QuickPickItems } from "..";
+import { DialogValues, QuickPick, QuickPickItemFunction, QuickPickItems, QuickPickOptions } from "..";
 import { Logger } from "@aditosoftware/vscode-logging";
 import * as vscode from "vscode";
+
+/**
+ * Any options for loading quick picks
+ */
+interface LoadingQuickPickOptions extends QuickPickOptions {
+  /**
+   * The title that should be shown during the loading.
+   */
+  readonly loadingTitle: string;
+
+  /**
+   * The function that is used for reload any data.
+   * This can be different from the normal data generate function (`generateItems`)
+   */
+  readonly reloadItems: QuickPickItemFunction;
+
+  /**
+   *  The tooltip that should be shown when reloading
+   */
+  readonly reloadTooltip: string;
+}
 
 /**
  * A long loading quick pick input. This should be used, if there is any long-loading data is expected.
@@ -8,30 +29,7 @@ import * as vscode from "vscode";
  * For example, if your loading takes 20 seconds, you should use this input over QuickPick, because this will notify the user about the loading process.
  * If you don't have any data that needs loading or your data is expected to have a very short loading time, then you should use QuickPick
  */
-export class LoadingQuickPick extends QuickPick {
-  /**
-   * Constructor.
-   * @param loadingTitle - The title that should be shown during the loading.
-   * @param reloadItems - The function that is used for reload any data.    * This can be different from the normal data generate function (`generateItems`)
-   * @param reloadTooltip - The tooltip that should be shown when reloading
-   */
-  constructor(
-    name: string,
-    title: string,
-    private loadingTitle: string,
-    generateItems: QuickPickItemFunction,
-    private reloadItems: QuickPickItemFunction,
-    private reloadTooltip: string,
-    allowMultiple?: boolean,
-    beforeInput?: BeforeInputType,
-    afterInput?: AfterInputType
-  ) {
-    super(name, title, generateItems, allowMultiple, beforeInput, afterInput);
-    this.loadingTitle = loadingTitle;
-    this.reloadItems = reloadItems;
-    this.reloadTooltip = reloadTooltip;
-  }
-
+export class LoadingQuickPick extends QuickPick<LoadingQuickPickOptions> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
@@ -39,28 +37,28 @@ export class LoadingQuickPick extends QuickPick {
   ): Promise<string[] | undefined> {
     const reloadButton: vscode.QuickInputButton = {
       iconPath: new vscode.ThemeIcon("sync"),
-      tooltip: this.reloadTooltip,
+      tooltip: this.inputOptions.reloadTooltip,
     };
 
     // Show quick input with loaded data
     const quickPick = vscode.window.createQuickPick();
     quickPick.ignoreFocusOut = true;
-    quickPick.canSelectMany = this.allowMultiple ? this.allowMultiple : false;
+    quickPick.canSelectMany = this.inputOptions.allowMultiple ? this.inputOptions.allowMultiple : false;
     // add a reload button
     quickPick.buttons = [reloadButton];
 
     // and add a handler for the reload button
     quickPick.onDidTriggerButton((button) => {
       if (button === reloadButton) {
-        Logger.getLogger().debug({ message: `Reload triggered for ${this.title}` });
+        Logger.getLogger().debug({ message: `Reload triggered for ${this.inputOptions.title}` });
         this.prepareLoading(quickPick, currentStep, maximumStep);
 
         // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
         setTimeout(() => {
           // load the items and then update title and items
-          this.loadItems(this.reloadItems, currentResults).then((result) => {
+          this.loadItems(this.inputOptions.reloadItems, currentResults).then((result) => {
             this.handlePostLoading(quickPick, currentStep, maximumStep, result);
-            Logger.getLogger().debug({ message: `Reload done for ${this.title}` });
+            Logger.getLogger().debug({ message: `Reload done for ${this.inputOptions.title}` });
           });
         }, 1);
       }
@@ -72,7 +70,7 @@ export class LoadingQuickPick extends QuickPick {
     quickPick.show();
 
     // loads all the items and shows them
-    const data = await this.loadItems(this.generateItems, currentResults);
+    const data = await this.loadItems(this.inputOptions.generateItems, currentResults);
     this.handlePostLoading(quickPick, currentStep, maximumStep, data);
 
     // Wait for user input or cancellation
@@ -99,7 +97,7 @@ export class LoadingQuickPick extends QuickPick {
     currentStep: number,
     maximumStep: number
   ): void {
-    quickPick.title = this.generateTitle(this.loadingTitle, currentStep, maximumStep);
+    quickPick.title = this.generateTitle(this.inputOptions.loadingTitle, currentStep, maximumStep);
     quickPick.placeholder = "Please wait, loading is in progress. This might take a while.";
     quickPick.busy = true;
     quickPick.enabled = false;
@@ -119,7 +117,7 @@ export class LoadingQuickPick extends QuickPick {
     data: QuickPickItems
   ): void {
     quickPick.placeholder = this.generatePlaceholder();
-    quickPick.title = this.generateTitle(this.title, currentStep, maximumStep, data.additionalTitle);
+    quickPick.title = this.generateTitle(this.inputOptions.title, currentStep, maximumStep, data.additionalTitle);
     quickPick.items = data.items;
     quickPick.busy = false;
     quickPick.enabled = true;

@@ -1,4 +1,4 @@
-import { InputBase, DialogValues } from ".";
+import { InputBase, DialogValues, InputBaseOptions } from ".";
 import { Logger } from "@aditosoftware/vscode-logging";
 
 /**
@@ -10,7 +10,7 @@ import { Logger } from "@aditosoftware/vscode-logging";
  * @returns the dialog values from the inputs
  */
 export async function handleMultiStepInput(
-  inputs: InputBase[],
+  inputs: InputBase<InputBaseOptions>[],
   dialogValues?: DialogValues
 ): Promise<DialogValues | undefined> {
   let currentStep: number = 1;
@@ -23,21 +23,21 @@ export async function handleMultiStepInput(
 
   for (const input of inputs) {
     // check if input is needed
-    if (!input.beforeInput || input.beforeInput(dialogValues)) {
+    if (!input.inputOptions.beforeInput || input.inputOptions.beforeInput(dialogValues)) {
       // if needed, then show dialog
       const result = await input.showDialog(dialogValues, currentStep, totalNumber);
 
       if (!result) {
         // User canceled the selection
-        Logger.getLogger().debug({ message: `Command ${input.name} was cancelled` });
+        Logger.getLogger().debug({ message: `Command ${input.inputOptions.name} was cancelled` });
         return;
       }
 
-      dialogValues.addValue(input, result);
+      dialogValues.addValue(input.inputOptions.name, result);
 
       // if there is some special behavior after the input, handle it
-      if (input.afterInput) {
-        input.afterInput(dialogValues);
+      if (input.inputOptions.afterInput) {
+        input.inputOptions.afterInput(dialogValues);
       }
 
       currentStep++;

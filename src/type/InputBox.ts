@@ -1,23 +1,20 @@
-import { AfterInputType, BeforeInputType, DialogValues, InputBase } from "..";
+import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
+
+/**
+ * The options for the input box.
+ */
+interface InputBoxOptions extends InputBaseOptions {
+  /**
+   * Any vscode options for the input box.
+   */
+  readonly inputBoxOptions: vscode.InputBoxOptions;
+}
 
 /**
  * Input for any free text.
  */
-export class InputBox extends InputBase {
-  /**
-   *Constructor.
-   * @param inputBoxOptions - Any options for the input box.
-   */
-  constructor(
-    name: string,
-    private inputBoxOptions: vscode.InputBoxOptions,
-    beforeInput?: BeforeInputType,
-    afterInput?: AfterInputType
-  ) {
-    super(name, beforeInput, afterInput);
-    this.inputBoxOptions = inputBoxOptions;
-  }
+export class InputBox extends InputBase<InputBoxOptions> {
 
   async showDialog(
     _currentResults: DialogValues,
@@ -27,7 +24,7 @@ export class InputBox extends InputBase {
     const stepOutput = this.generateStepOutput(currentStep, maximumStep);
 
     // copy the options, so they will not persist during multiple dialogs
-    const options = { ...this.inputBoxOptions };
+    const options = { ...this.inputOptions.inputBoxOptions };
     if (options.title) {
       // add the step indicator to the title
       options.title += ` ${stepOutput}`;

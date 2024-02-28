@@ -1,4 +1,4 @@
-import { AfterInputType, BeforeInputType, DialogValues, InputBase } from "..";
+import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 
 /**
@@ -11,6 +11,23 @@ import * as vscode from "vscode";
 export type QuickPickItemFunction = (
   currentResults: DialogValues
 ) => Promise<QuickPickItems> | Promise<vscode.QuickPickItem[]> | vscode.QuickPickItem[];
+
+export interface QuickPickOptions extends InputBaseOptions {
+  /**
+   *  The title of the quick pick.
+   */
+  readonly title: string;
+
+  /**
+   * Any function to generate the items for the quick pick. This can be a sync or async function.
+   */
+  readonly generateItems: QuickPickItemFunction;
+
+  /**
+   * Option, if multiple elements are allowed. If no value present, then only one element is allowed.
+   */
+  readonly allowMultiple?: boolean;
+}
 
 /**
  * The items loaded from the `QuickPickItemFunction`.
@@ -31,40 +48,19 @@ export interface QuickPickItems {
 /**
  * Any quick pick that is not an selection of an connection.
  */
-export class QuickPick extends InputBase {
-  /**
-   * Constructor.
-   *
-   * @param title - The title of the quick pick.
-   * @param generateItems - Any function to generate the items for the quick pick. This can be a sync or async function.
-   * @param allowMultiple - Option, if multiple elements are allowed. If no value present, then only one element is allowed.
-   */
-  constructor(
-    name: string,
-    protected title: string,
-    protected generateItems: QuickPickItemFunction,
-    protected allowMultiple?: boolean,
-    beforeInput?: BeforeInputType,
-    afterInput?: AfterInputType
-  ) {
-    super(name, beforeInput, afterInput);
-    this.title = title;
-    this.allowMultiple = allowMultiple;
-    this.generateItems = generateItems;
-  }
-
+export class QuickPick<T extends QuickPickOptions> extends InputBase<T> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
     maximumStep: number
   ): Promise<string[] | undefined> {
-    const items = await this.loadItems(this.generateItems, currentResults);
+    const items = await this.loadItems(this.inputOptions.generateItems, currentResults);
 
     const result: vscode.QuickPickItem | vscode.QuickPickItem[] | undefined = await vscode.window.showQuickPick(
       items.items,
       {
-        canPickMany: this.allowMultiple,
-        title: this.generateTitle(this.title, currentStep, maximumStep, items.additionalTitle),
+        canPickMany: this.inputOptions.allowMultiple,
+        title: this.generateTitle(this.inputOptions.title, currentStep, maximumStep, items.additionalTitle),
         placeHolder: this.generatePlaceholder(),
       }
     );
@@ -128,6 +124,6 @@ export class QuickPick extends InputBase {
    * @returns the generated placeholder
    */
   protected generatePlaceholder(): string {
-    return `Select ${this.allowMultiple ? "any number of items" : "one item"}`;
+    return `Select ${this.inputOptions.allowMultiple ? "any number of items" : "one item"}`;
   }
 }

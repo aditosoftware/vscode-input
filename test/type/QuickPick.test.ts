@@ -30,7 +30,7 @@ suite("QuickPick tests", () => {
    * Checks if a correct title was created when `allowMultiple` was not set.
    */
   test("should create correct title (no allowMultiple)", async () => {
-    const quickPick = new QuickPick("quickPick", "My Title", () => quickPickItems);
+    const quickPick = new QuickPick({ name: "quickPick", title: "My Title", generateItems: () => quickPickItems });
 
     showQuickPickStub.resolves(undefined);
 
@@ -50,7 +50,12 @@ suite("QuickPick tests", () => {
    * Checks if a correct title was created when `allowMultiple` was set to `true`.
    */
   test("should create correct title (allowMultiple to true)", async () => {
-    const quickPick = new QuickPick("quickPick", "My Title", () => quickPickItems, true);
+    const quickPick = new QuickPick({
+      name: "quickPick",
+      title: "My Title",
+      generateItems: () => quickPickItems,
+      allowMultiple: true,
+    });
 
     showQuickPickStub.resolves(undefined);
 
@@ -75,7 +80,7 @@ suite("QuickPick tests", () => {
       additionalTitle: "My additional title",
     };
 
-    const quickPick = new QuickPick("quickPick", "My Title", async () => items);
+    const quickPick = new QuickPick({ name: "quickPick", title: "My Title", generateItems: async () => items });
 
     showQuickPickStub.resolves(undefined);
 
@@ -95,7 +100,12 @@ suite("QuickPick tests", () => {
    * Tests that a single item was correctly selected
    */
   test("should correctly handle single selection", async () => {
-    const quickPick = new QuickPick("quickPick", "My Title", () => quickPickItems, true);
+    const quickPick = new QuickPick({
+      name: "quickPick",
+      title: "My Title",
+      generateItems: () => quickPickItems,
+      allowMultiple: true,
+    });
 
     const expectedLabel = "selected item";
     showQuickPickStub.resolves({ label: expectedLabel, description: "My description", detail: "My detail" });
@@ -116,7 +126,12 @@ suite("QuickPick tests", () => {
    * Tests that multiple items were correctly selected.
    */
   test("should correctly handle multiple selection", async () => {
-    const quickPick = new QuickPick("quickPick", "My Title", () => [], true);
+    const quickPick = new QuickPick({
+      name: "quickPick",
+      title: "My Title",
+      generateItems: () => [],
+      allowMultiple: true,
+    });
 
     showQuickPickStub.resolves(quickPickItems);
 

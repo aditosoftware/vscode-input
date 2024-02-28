@@ -26,7 +26,7 @@ suite("InputBox Tests", () => {
    * Tests that a dummy title is created when no title is provided.
    */
   test("showDialog should create correct title when no title is provided", async () => {
-    const inputBox = new InputBox("Unit", {});
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: {} });
 
     await inputBox.showDialog(new DialogValues(), 2, 4);
 
@@ -37,7 +37,10 @@ suite("InputBox Tests", () => {
    * Tests that an existing title will be correctly transformed into the title with step indicator.
    */
   test("showDialog should create correct title when title is provided", async () => {
-    const inputBox = new InputBox("Unit", { title: "My Title" });
+    const inputBox = new InputBox({
+      name: "Unit",
+      inputBoxOptions: { title: "My Title" },
+    });
 
     await inputBox.showDialog(new DialogValues(), 2, 4);
 
@@ -48,14 +51,17 @@ suite("InputBox Tests", () => {
    * Tests that various InputBoxOptions will be preserved after the execution.
    */
   test("showDialog should preserve all options", async () => {
-    const inputBox = new InputBox("Unit", {
-      title: "My Title",
-      ignoreFocusOut: true,
-      password: true,
-      placeHolder: "my placeholder",
-      prompt: "my prompt",
-      value: "my value",
-      valueSelection: [3, 7],
+    const inputBox = new InputBox({
+      name: "Unit",
+      inputBoxOptions: {
+        title: "My Title",
+        ignoreFocusOut: true,
+        password: true,
+        placeHolder: "my placeholder",
+        prompt: "my prompt",
+        value: "my value",
+        valueSelection: [3, 7],
+      },
     });
 
     await inputBox.showDialog(new DialogValues(), 2, 4);
