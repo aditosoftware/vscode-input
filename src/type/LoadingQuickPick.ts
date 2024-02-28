@@ -76,22 +76,6 @@ export class LoadingQuickPick extends QuickPick {
     this.handlePostLoading(quickPick, currentStep, maximumStep, data);
 
     // Wait for user input or cancellation
-    const selected = await this.handleSelection(quickPick);
-
-    return selected;
-  }
-
-  /**
-   * Handles the selection of the quick pick items.
-   *
-   * If there are items selected, then the label of the selected items will be returned.
-   *
-   * TODO check if tests are possible for this method
-   *
-   * @param quickPick - the quick pick
-   * @returns the selected items
-   */
-  private async handleSelection(quickPick: vscode.QuickPick<vscode.QuickPickItem>): Promise<string[] | undefined> {
     return await new Promise<string[] | undefined>((resolve) => {
       quickPick.onDidAccept(() => {
         resolve(quickPick.selectedItems.map((pSelected) => pSelected.label));
