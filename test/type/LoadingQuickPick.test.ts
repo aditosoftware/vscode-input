@@ -88,7 +88,7 @@ suite("LoadingQuickPick tests", () => {
     /**
      * A spy of the setter of the title of a quick pick. This can be used the check if the title was overwritten correctly.
      */
-    let setTitle: PropertyDescriptor & {
+    let titleSet: PropertyDescriptor & {
       get: Sinon.SinonSpy<[], string | undefined>;
       set: Sinon.SinonSpy<[string | undefined], void>;
     };
@@ -111,7 +111,7 @@ suite("LoadingQuickPick tests", () => {
     /**
      * A spy of the setter of the enabled field of a quick pick. This can be used the check if enabled was overwritten correctly.
      */
-    let quickPickEnabled: PropertyDescriptor & {
+    let enabledSet: PropertyDescriptor & {
       get: Sinon.SinonSpy<[], boolean>;
       set: Sinon.SinonSpy<[boolean], void>;
     };
@@ -136,10 +136,10 @@ suite("LoadingQuickPick tests", () => {
       clock = Sinon.useFakeTimers();
 
       // add some spy to the set of some attributes in order to check if the values were correctly updated
-      setTitle = Sinon.spy(quickPickWithAccept, "title", ["set"]);
+      titleSet = Sinon.spy(quickPickWithAccept, "title", ["set"]);
       placeholderSet = Sinon.spy(quickPickWithAccept, "placeholder", ["set"]);
       busySet = Sinon.spy(quickPickWithAccept, "busy", ["set"]);
-      quickPickEnabled = Sinon.spy(quickPickWithAccept, "enabled", ["set"]);
+      enabledSet = Sinon.spy(quickPickWithAccept, "enabled", ["set"]);
 
       // return some dummy items when the selectedItems will be returned
       // if this selection will be changed, you need to update `expectedItems` as well
@@ -155,10 +155,10 @@ suite("LoadingQuickPick tests", () => {
      * Restore all the stubs after each test.
      */
     teardown("restore", () => {
-      setTitle.set.restore();
+      titleSet.set.restore();
       placeholderSet.set.restore();
       busySet.set.restore();
-      quickPickEnabled.set.restore();
+      enabledSet.set.restore();
 
       getSelectedItems.restore();
 
@@ -181,46 +181,11 @@ suite("LoadingQuickPick tests", () => {
         allowMultiple: true,
       });
 
-      const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
 
-      assert.deepStrictEqual(expectedItems, result);
-
-      assert.strictEqual(true, quickPickWithAccept.ignoreFocusOut, "ignoreFocusOut");
       assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
-      assert.deepStrictEqual(
-        [
-          {
-            iconPath: new vscode.ThemeIcon("sync"),
-            tooltip: "my reload tooltip",
-          },
-        ],
-        quickPickWithAccept.buttons,
-        "buttons"
-      );
 
-      // title asserts
-      Sinon.assert.calledTwice(setTitle.set);
-      Sinon.assert.callOrder(
-        setTitle.set.withArgs("My loading title - (Step 2 of 4)"),
-        setTitle.set.withArgs("My title - (Step 2 of 4)")
-      );
-
-      // placeholder asserts
-      Sinon.assert.calledTwice(placeholderSet.set);
-      Sinon.assert.callOrder(
-        placeholderSet.set.withArgs("Please wait, loading is in progress. This might take a while."),
-        placeholderSet.set.withArgs("Select any number of items")
-      );
-
-      // busy asserts
-      Sinon.assert.calledTwice(busySet.set);
-      Sinon.assert.callOrder(busySet.set.withArgs(true), busySet.set.withArgs(false));
-
-      // enabled asserts
-      Sinon.assert.calledTwice(quickPickEnabled.set);
-      Sinon.assert.callOrder(quickPickEnabled.set.withArgs(false), quickPickEnabled.set.withArgs(true));
-
-      assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
+      validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
     });
 
     /**
@@ -250,46 +215,11 @@ suite("LoadingQuickPick tests", () => {
         reloadTooltip: "my reload tooltip",
       });
 
-      const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
 
-      assert.deepStrictEqual(expectedItems, result);
-
-      assert.strictEqual(true, quickPickWithAccept.ignoreFocusOut, "ignoreFocusOut");
       assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
-      assert.deepStrictEqual(
-        [
-          {
-            iconPath: new vscode.ThemeIcon("sync"),
-            tooltip: "my reload tooltip",
-          },
-        ],
-        quickPickWithAccept.buttons,
-        "buttons"
-      );
 
-      // title asserts
-      Sinon.assert.calledTwice(setTitle.set);
-      Sinon.assert.callOrder(
-        setTitle.set.withArgs("My loading title - (Step 2 of 4)"),
-        setTitle.set.withArgs("My title - (Step 2 of 4)")
-      );
-
-      // placeholder asserts
-      Sinon.assert.calledTwice(placeholderSet.set);
-      Sinon.assert.callOrder(
-        placeholderSet.set.withArgs("Please wait, loading is in progress. This might take a while."),
-        placeholderSet.set.withArgs("Select one item")
-      );
-
-      // busy asserts
-      Sinon.assert.calledTwice(busySet.set);
-      Sinon.assert.callOrder(busySet.set.withArgs(true), busySet.set.withArgs(false));
-
-      // enabled asserts
-      Sinon.assert.calledTwice(quickPickEnabled.set);
-      Sinon.assert.callOrder(quickPickEnabled.set.withArgs(false), quickPickEnabled.set.withArgs(true));
-
-      assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
+      validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
 
       // Trigger the reload
       onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
@@ -297,41 +227,8 @@ suite("LoadingQuickPick tests", () => {
       // advance the clock 2 ms, to trigger the callback in the setTimeout
       await clock.tickAsync(2);
 
-      // title asserts
-      Sinon.assert.callCount(setTitle.set, 4);
-      Sinon.assert.callOrder(
-        setTitle.set.withArgs("My loading title - (Step 2 of 4)"),
-        setTitle.set.withArgs("My title - (Step 2 of 4)"),
-        setTitle.set.withArgs("My loading title - (Step 2 of 4)"),
-        setTitle.set.withArgs("My title - (Step 2 of 4)")
-      );
-
-      // placeholder asserts
-      Sinon.assert.callCount(placeholderSet.set, 4);
-      Sinon.assert.callOrder(
-        placeholderSet.set.withArgs("Please wait, loading is in progress. This might take a while."),
-        placeholderSet.set.withArgs("Select one item"),
-        placeholderSet.set.withArgs("Please wait, loading is in progress. This might take a while."),
-        placeholderSet.set.withArgs("Select one item")
-      );
-
-      // busy asserts
-      Sinon.assert.callCount(busySet.set, 4);
-      Sinon.assert.callOrder(
-        busySet.set.withArgs(true),
-        busySet.set.withArgs(false),
-        busySet.set.withArgs(true),
-        busySet.set.withArgs(false)
-      );
-
-      // enabled asserts
-      Sinon.assert.callCount(quickPickEnabled.set, 4);
-      Sinon.assert.callOrder(
-        quickPickEnabled.set.withArgs(false),
-        quickPickEnabled.set.withArgs(true),
-        quickPickEnabled.set.withArgs(false),
-        quickPickEnabled.set.withArgs(true)
-      );
+      // assert that all loading was done
+      validateResults(true, titleSet, placeholderSet, busySet, enabledSet);
 
       // check that the reload was logged
       Sinon.assert.calledTwice(debugLog);
@@ -354,3 +251,81 @@ suite("LoadingQuickPick tests", () => {
     });
   });
 });
+
+// TODO TSDOC
+
+async function showAndAssert(
+  loadingQuickPick: LoadingQuickPick,
+  expectedItems: string[],
+  quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>
+) {
+  const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+
+  assert.deepStrictEqual(expectedItems, result);
+
+  assert.strictEqual(true, quickPickWithAccept.ignoreFocusOut, "ignoreFocusOut");
+  assert.deepStrictEqual(
+    [
+      {
+        iconPath: new vscode.ThemeIcon("sync"),
+        tooltip: "my reload tooltip",
+      },
+    ],
+    quickPickWithAccept.buttons,
+    "buttons"
+  );
+
+  assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
+}
+
+function validateResults(
+  duplicate: boolean,
+  titleSet: PropertyDescriptor & {
+    get: Sinon.SinonSpy<[], string | undefined>;
+    set: Sinon.SinonSpy<[string | undefined], void>;
+  },
+  placeholderSet: PropertyDescriptor & {
+    get: Sinon.SinonSpy<[], string | undefined>;
+    set: Sinon.SinonSpy<[string | undefined], void>;
+  },
+  busySet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
+  enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> }
+) {
+  const callCount = duplicate ? 4 : 2;
+
+  // title asserts
+  Sinon.assert.callCount(titleSet.set, callCount);
+
+  const loadingTitle = titleSet.set.withArgs("My loading title - (Step 2 of 4)");
+  const title = titleSet.set.withArgs("My title - (Step 2 of 4)");
+  Sinon.assert.callOrder(...(duplicate ? [loadingTitle, title, loadingTitle, title] : [loadingTitle, title]));
+
+  // placeholder asserts
+  Sinon.assert.callCount(placeholderSet.set, callCount);
+
+  // FIXME placeholder is not set correctly after the loading
+  const loadingPlaceholder = placeholderSet.set.withArgs(
+    "Please wait, loading is in progress. This might take a while."
+  );
+  const placeholder = placeholderSet.set.withArgs("Select any number of items");
+  Sinon.assert.callOrder(
+    ...(duplicate
+      ? [loadingPlaceholder, placeholder, loadingPlaceholder, placeholder]
+      : [loadingPlaceholder, placeholder])
+  );
+
+  // busy asserts
+  Sinon.assert.callCount(busySet.set, callCount);
+  const busyTrue = busySet.set.withArgs(true);
+  const busyFalse = busySet.set.withArgs(false);
+  Sinon.assert.callOrder(...(duplicate ? [busyTrue, busyFalse, busyTrue, busyFalse] : [busyTrue, busyFalse]));
+
+  // enabled asserts
+  Sinon.assert.callCount(enabledSet.set, callCount);
+
+  const enabledFalse = enabledSet.set.withArgs(false);
+  const enabledTrue = enabledSet.set.withArgs(true);
+  Sinon.assert.callOrder(
+    ...(duplicate ? [enabledFalse, enabledTrue, enabledFalse, enabledTrue] : [enabledFalse, enabledTrue])
+  );
+}
