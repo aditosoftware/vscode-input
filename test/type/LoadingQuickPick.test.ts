@@ -252,5 +252,6 @@ suite("LoadingQuickPick tests", () => {
 
     onDidTriggerButtonStub.restore();
     handleSelectionStub.restore();
+    debugLog.restore();
   });
 });
