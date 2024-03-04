@@ -2,7 +2,7 @@ import Sinon from "sinon";
 import { DialogValues, QuickPick } from "../../src";
 import * as vscode from "vscode";
 import assert from "assert";
-import { QuickPickItems } from "../../src/type/GenericQuickPick";
+import { QuickPickItems } from "../../src/type/quickPick/GenericQuickPick";
 
 suite("QuickPick tests", () => {
   /**

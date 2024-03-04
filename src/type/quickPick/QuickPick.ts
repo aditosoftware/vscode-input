@@ -1,6 +1,7 @@
-import { DialogValues } from "..";
+import { DialogValues } from "../..";
 import * as vscode from "vscode";
-import { GenericQuickPick, GenericQuickPickOptions } from "./GenericQuickPick";
+import { GenericQuickPick } from "./AbstractQuickPick";
+import { GenericQuickPickOptions } from "./GenericQuickPick";
 
 /**
  * Any quick pick that does not require any sort of loading.

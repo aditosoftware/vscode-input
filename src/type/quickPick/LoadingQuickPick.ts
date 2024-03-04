@@ -1,7 +1,8 @@
-import { DialogValues } from "..";
+import { DialogValues } from "../..";
 import { Logger } from "@aditosoftware/vscode-logging";
 import * as vscode from "vscode";
-import { GenericQuickPick, GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
+import { GenericQuickPick } from "./AbstractQuickPick";
+import { GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
 
 /**
  * Any options for loading quick picks
