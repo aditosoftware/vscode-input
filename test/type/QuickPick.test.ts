@@ -1,15 +1,29 @@
 import Sinon from "sinon";
-import { DialogValues, QuickPick, QuickPickItems } from "../../src";
+import { DialogValues, QuickPick, QuickPickItems, QuickPickOptions } from "../../src";
 import * as vscode from "vscode";
 import assert from "assert";
 
 suite("QuickPick tests", () => {
+  /**
+   * Some items that can be returned by `generateItems`.
+   */
   const quickPickItems: vscode.QuickPickItem[] = [
     { label: "item1", description: "description1", detail: "detail1" },
     { label: "item2", description: "description2", detail: "detail2" },
     { label: "item3", description: "description3", detail: "detail3" },
   ];
 
+  /**
+   * Some basic options that apply for every quick pick.
+   */
+  const basicOptions = {
+    name: "quickPick",
+    title: "My Title",
+  };
+
+  /**
+   * The stub for `showQuickPick` of vscode.
+   */
   let showQuickPickStub: Sinon.SinonStub;
 
   /**
@@ -30,15 +44,12 @@ suite("QuickPick tests", () => {
    * Checks if a correct title was created when `allowMultiple` was not set.
    */
   test("should create correct title (no allowMultiple)", async () => {
-    const quickPick = new QuickPick({ name: "quickPick", title: "My Title", generateItems: () => quickPickItems });
+    const quickPick = new QuickPick({ ...basicOptions, generateItems: () => quickPickItems });
 
     showQuickPickStub.resolves(undefined);
 
-    const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+    await showDialogAndAssert(undefined, quickPick);
 
-    assert.strictEqual(undefined, result);
-
-    Sinon.assert.calledOnce(showQuickPickStub);
     Sinon.assert.calledWithExactly(showQuickPickStub, quickPickItems, {
       title: "My Title - (Step 2 of 4)",
       canPickMany: undefined,
@@ -51,19 +62,15 @@ suite("QuickPick tests", () => {
    */
   test("should create correct title (allowMultiple to true)", async () => {
     const quickPick = new QuickPick({
-      name: "quickPick",
-      title: "My Title",
+      ...basicOptions,
       generateItems: () => quickPickItems,
       allowMultiple: true,
     });
 
     showQuickPickStub.resolves(undefined);
 
-    const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+    await showDialogAndAssert(undefined, quickPick);
 
-    assert.strictEqual(undefined, result);
-
-    Sinon.assert.calledOnce(showQuickPickStub);
     Sinon.assert.calledWithExactly(showQuickPickStub, quickPickItems, {
       title: "My Title - (Step 2 of 4)",
       canPickMany: true,
@@ -80,15 +87,12 @@ suite("QuickPick tests", () => {
       additionalTitle: "My additional title",
     };
 
-    const quickPick = new QuickPick({ name: "quickPick", title: "My Title", generateItems: async () => items });
+    const quickPick = new QuickPick({ ...basicOptions, generateItems: async () => items });
 
     showQuickPickStub.resolves(undefined);
 
-    const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+    await showDialogAndAssert(undefined, quickPick);
 
-    assert.strictEqual(undefined, result);
-
-    Sinon.assert.calledOnce(showQuickPickStub);
     Sinon.assert.calledWithExactly(showQuickPickStub, quickPickItems, {
       title: "My Title (My additional title) - (Step 2 of 4)",
       canPickMany: undefined,
@@ -101,8 +105,7 @@ suite("QuickPick tests", () => {
    */
   test("should correctly handle single selection", async () => {
     const quickPick = new QuickPick({
-      name: "quickPick",
-      title: "My Title",
+      ...basicOptions,
       generateItems: () => quickPickItems,
       allowMultiple: true,
     });
@@ -110,11 +113,8 @@ suite("QuickPick tests", () => {
     const expectedLabel = "selected item";
     showQuickPickStub.resolves({ label: expectedLabel, description: "My description", detail: "My detail" });
 
-    const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+    await showDialogAndAssert([expectedLabel], quickPick);
 
-    assert.deepStrictEqual([expectedLabel], result);
-
-    Sinon.assert.calledOnce(showQuickPickStub);
     Sinon.assert.calledWithExactly(showQuickPickStub, quickPickItems, {
       title: "My Title - (Step 2 of 4)",
       canPickMany: true,
@@ -127,19 +127,15 @@ suite("QuickPick tests", () => {
    */
   test("should correctly handle multiple selection", async () => {
     const quickPick = new QuickPick({
-      name: "quickPick",
-      title: "My Title",
+      ...basicOptions,
       generateItems: () => [],
       allowMultiple: true,
     });
 
     showQuickPickStub.resolves(quickPickItems);
 
-    const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+    await showDialogAndAssert(["item1", "item2", "item3"], quickPick);
 
-    assert.deepStrictEqual(["item1", "item2", "item3"], result);
-
-    Sinon.assert.calledOnce(showQuickPickStub);
     Sinon.assert.calledWithExactly(showQuickPickStub, [], {
       title: "My Title - (Step 2 of 4)",
       canPickMany: true,
@@ -147,3 +143,14 @@ suite("QuickPick tests", () => {
     });
   });
 });
+
+/**
+ * Shows the dialog and asserts the result of the dialog.
+ * @param expected - the expected result of the dialog
+ * @param quickPick - the quick pick that should be used for showing the dialog
+ */
+async function showDialogAndAssert(expected: string[] | undefined, quickPick: QuickPick<QuickPickOptions>) {
+  const result = await quickPick.showDialog(new DialogValues(), 2, 4);
+
+  assert.deepStrictEqual(expected, result);
+}
