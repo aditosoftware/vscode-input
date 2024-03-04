@@ -1,6 +1,6 @@
 import Sinon from "sinon";
 import * as vscode from "vscode";
-import { DialogValues, LoadingQuickPick } from "../../src";
+import { DialogValues, LoadingQuickPick, initializeLogger } from "../../src";
 import assert from "assert";
 import { Logger } from "@aditosoftware/vscode-logging";
 import path from "path";
@@ -214,6 +214,8 @@ suite("LoadingQuickPick tests", () => {
           logUri: vscode.Uri.file(path.join(os.tmpdir(), "input")),
         } as unknown as vscode.ExtensionContext;
         Logger.initializeLogger(context, "Input");
+        // and initialize the logger from the input with the currently created logger
+        initializeLogger(Logger.getLogger());
 
         const debugLog = Sinon.spy(Logger.getLogger(), "debug");
 

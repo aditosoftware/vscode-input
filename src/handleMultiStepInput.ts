@@ -2,6 +2,20 @@ import { InputBase, DialogValues, InputBaseOptions } from ".";
 import { Logger } from "@aditosoftware/vscode-logging";
 
 /**
+ * The logger that is used for every logging.
+ */
+export let logger: Logger;
+
+/**
+ * Initializes the logging for the multi step input. This needs to be done once.
+ * 
+ * @param pLogger - the logger that should be used for every logging
+ */
+export function initializeLogger(pLogger: Logger) {
+  logger = pLogger;
+}
+
+/**
  * Handles a multi-step input. All the inputs will be progressed in order.
  * If any input comes back as undefined, then an information message will be shown to the user
  * and nothing will be returned.
@@ -29,7 +43,7 @@ export async function handleMultiStepInput(
 
       if (!result) {
         // User canceled the selection
-        Logger.getLogger().debug({ message: `Command ${input.inputOptions.name} was cancelled` });
+        logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
         return;
       }
 

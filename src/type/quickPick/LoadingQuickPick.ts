@@ -1,5 +1,4 @@
-import { DialogValues } from "../..";
-import { Logger } from "@aditosoftware/vscode-logging";
+import { DialogValues, logger } from "../..";
 import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
 import { GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
@@ -53,16 +52,16 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPickOptions> 
     // and add a handler for the reload button
     quickPick.onDidTriggerButton((button) => {
       if (button === reloadButton) {
-        Logger.getLogger().debug({ message: `Reload triggered for ${this.inputOptions.title}` });
+        logger.debug({ message: `Reload triggered for ${this.inputOptions.title}` });
         this.prepareLoading(quickPick, currentStep, maximumStep);
 
         // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
         setTimeout(() => {
           // load the items and then update title and items
-          this.loadItems(this.inputOptions.reloadItems || this.inputOptions.generateItems, currentResults).then(
+          this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults).then(
             (result) => {
               this.handlePostLoading(quickPick, currentStep, maximumStep, result);
-              Logger.getLogger().debug({ message: `Reload done for ${this.inputOptions.title}` });
+              logger.debug({ message: `Reload done for ${this.inputOptions.title}` });
             }
           );
         }, 1);

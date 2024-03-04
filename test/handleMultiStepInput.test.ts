@@ -1,5 +1,5 @@
 import assert from "assert";
-import { DialogValues, InputBase, InputBaseOptions, InputBox, handleMultiStepInput } from "../src";
+import { DialogValues, InputBase, InputBaseOptions, InputBox, handleMultiStepInput, initializeLogger } from "../src";
 import Sinon from "sinon";
 import * as vscode from "vscode";
 import path from "path";
@@ -45,6 +45,8 @@ suite("handleMultiStepInput test", () => {
       logUri: vscode.Uri.file(path.join(os.tmpdir(), "input")),
     } as unknown as vscode.ExtensionContext;
     Logger.initializeLogger(context, "Input");
+    // and initialize the logger from the input with the currently created logger
+    initializeLogger(Logger.getLogger());
 
     debugLog = Sinon.spy(Logger.getLogger(), "debug");
 
