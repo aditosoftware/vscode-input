@@ -116,10 +116,10 @@ export class LoadingQuickPick extends QuickPick<LoadingQuickPickOptions> {
     maximumStep: number,
     data: QuickPickItems
   ): void {
-    quickPick.placeholder = this.generatePlaceholder();
     quickPick.title = this.generateTitle(this.inputOptions.title, currentStep, maximumStep, data.additionalTitle);
-    quickPick.items = data.items;
+    quickPick.placeholder = this.generatePlaceholder();
     quickPick.busy = false;
     quickPick.enabled = true;
+    quickPick.items = data.items;
   }
 }

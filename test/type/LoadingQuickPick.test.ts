@@ -185,13 +185,15 @@ suite("LoadingQuickPick tests", () => {
 
       assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
 
-      validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
+      validateResults(false, titleSet, placeholderSet, busySet, enabledSet, "Select any number of items");
     });
 
     /**
      * Validates that the reload is triggered normally.
      */
     test("should trigger reload", async () => {
+      const selectOneItemPlaceholder = "Select one item";
+
       createQuickPick.returns(quickPickWithAccept);
 
       // create a dummy log instance for the logging
@@ -219,7 +221,7 @@ suite("LoadingQuickPick tests", () => {
 
       assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
 
-      validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
+      validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
 
       // Trigger the reload
       onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
@@ -228,7 +230,7 @@ suite("LoadingQuickPick tests", () => {
       await clock.tickAsync(2);
 
       // assert that all loading was done
-      validateResults(true, titleSet, placeholderSet, busySet, enabledSet);
+      validateResults(true, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
 
       // check that the reload was logged
       Sinon.assert.calledTwice(debugLog);
@@ -252,8 +254,12 @@ suite("LoadingQuickPick tests", () => {
   });
 });
 
-// TODO TSDOC
-
+/**
+ * Shows the dialog of the quick pick and asserts that are some common values are set.
+ * @param loadingQuickPick - the loading quick pick that should be used for showing the dialog
+ * @param expectedItems - the expected items that should be returned by the `showDialog` function
+ * @param quickPickWithAccept - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
+ */
 async function showAndAssert(
   loadingQuickPick: LoadingQuickPick,
   expectedItems: string[],
@@ -278,6 +284,15 @@ async function showAndAssert(
   assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
 }
 
+/**
+ * Asserts the calls (count and arguments) of various set elements of the quick pick.
+ * @param duplicate - if all the set call are done duplicate (e.g. after a reload)
+ * @param titleSet - the spy of the title set
+ * @param placeholderSet - the spy of the placeholder set
+ * @param busySet - the spy of the busy set
+ * @param enabledSet - the spy of the enabled set
+ * @param placeholderMessage - the message that is used for the placeholder. This can be different, when using `allowMultiple`
+ */
 function validateResults(
   duplicate: boolean,
   titleSet: PropertyDescriptor & {
@@ -289,25 +304,24 @@ function validateResults(
     set: Sinon.SinonSpy<[string | undefined], void>;
   },
   busySet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
-  enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> }
+  enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
+  placeholderMessage: string
 ) {
+  // general call count of every element
   const callCount = duplicate ? 4 : 2;
 
   // title asserts
   Sinon.assert.callCount(titleSet.set, callCount);
-
   const loadingTitle = titleSet.set.withArgs("My loading title - (Step 2 of 4)");
   const title = titleSet.set.withArgs("My title - (Step 2 of 4)");
   Sinon.assert.callOrder(...(duplicate ? [loadingTitle, title, loadingTitle, title] : [loadingTitle, title]));
 
   // placeholder asserts
   Sinon.assert.callCount(placeholderSet.set, callCount);
-
-  // FIXME placeholder is not set correctly after the loading
   const loadingPlaceholder = placeholderSet.set.withArgs(
     "Please wait, loading is in progress. This might take a while."
   );
-  const placeholder = placeholderSet.set.withArgs("Select any number of items");
+  const placeholder = placeholderSet.set.withArgs(placeholderMessage);
   Sinon.assert.callOrder(
     ...(duplicate
       ? [loadingPlaceholder, placeholder, loadingPlaceholder, placeholder]
@@ -322,7 +336,6 @@ function validateResults(
 
   // enabled asserts
   Sinon.assert.callCount(enabledSet.set, callCount);
-
   const enabledFalse = enabledSet.set.withArgs(false);
   const enabledTrue = enabledSet.set.withArgs(true);
   Sinon.assert.callOrder(
