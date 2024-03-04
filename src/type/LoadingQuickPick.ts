@@ -13,9 +13,10 @@ interface LoadingQuickPickOptions extends QuickPickOptions {
 
   /**
    * The function that is used for reload any data.
-   * This can be different from the normal data generate function (`generateItems`)
+   * This can be different from the normal data generate function (`generateItems`).
+   * If you do not give any function, then `generateItems` will be used to reload the items.
    */
-  readonly reloadItems: QuickPickItemFunction;
+  readonly reloadItems?: QuickPickItemFunction;
 
   /**
    *  The tooltip that should be shown when reloading
@@ -29,7 +30,7 @@ interface LoadingQuickPickOptions extends QuickPickOptions {
  * For example, if your loading takes 20 seconds, you should use this input over QuickPick, because this will notify the user about the loading process.
  * If you don't have any data that needs loading or your data is expected to have a very short loading time, then you should use QuickPick
  */
-export class LoadingQuickPick extends QuickPick<LoadingQuickPickOptions> {
+export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPickOptions> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
@@ -56,10 +57,12 @@ export class LoadingQuickPick extends QuickPick<LoadingQuickPickOptions> {
         // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
         setTimeout(() => {
           // load the items and then update title and items
-          this.loadItems(this.inputOptions.reloadItems, currentResults).then((result) => {
-            this.handlePostLoading(quickPick, currentStep, maximumStep, result);
-            Logger.getLogger().debug({ message: `Reload done for ${this.inputOptions.title}` });
-          });
+          this.loadItems(this.inputOptions.reloadItems || this.inputOptions.generateItems, currentResults).then(
+            (result) => {
+              this.handlePostLoading(quickPick, currentStep, maximumStep, result);
+              Logger.getLogger().debug({ message: `Reload done for ${this.inputOptions.title}` });
+            }
+          );
         }, 1);
       }
     });

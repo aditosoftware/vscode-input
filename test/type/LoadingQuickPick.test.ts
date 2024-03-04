@@ -188,68 +188,81 @@ suite("LoadingQuickPick tests", () => {
       validateResults(false, titleSet, placeholderSet, busySet, enabledSet, "Select any number of items");
     });
 
-    /**
-     * Validates that the reload is triggered normally.
-     */
-    test("should trigger reload", async () => {
-      const selectOneItemPlaceholder = "Select one item";
-
-      createQuickPick.returns(quickPickWithAccept);
-
-      // create a dummy log instance for the logging
-      const context: vscode.ExtensionContext = {
-        subscriptions: [],
-        logUri: vscode.Uri.file(path.join(os.tmpdir(), "input")),
-      } as unknown as vscode.ExtensionContext;
-      Logger.initializeLogger(context, "Input");
-
-      const debugLog = Sinon.spy(Logger.getLogger(), "debug");
-
-      // trigger method for reload button press
-      const onDidTriggerButtonStub = Sinon.stub(quickPickWithAccept, "onDidTriggerButton");
-
-      const loadingQuickPick = new LoadingQuickPick({
-        name: "loadingQuickPick",
-        title: "My title",
-        loadingTitle: "My loading title",
-        generateItems: () => [{ label: "normal item" }],
+    [
+      {
+        name: "with separate reload function",
+        expected: "reload item",
         reloadItems: () => [{ label: "reload item" }],
-        reloadTooltip: "my reload tooltip",
+      },
+      {
+        name: "without separate reload function",
+        expected: "normal item",
+        reloadItems: undefined,
+      },
+    ].forEach((pElement) => {
+      /**
+       * Validates that the reload is triggered normally.
+       */
+      test(`should trigger reload (${pElement.name})`, async () => {
+        const selectOneItemPlaceholder = "Select one item";
+
+        createQuickPick.returns(quickPickWithAccept);
+
+        // create a dummy log instance for the logging
+        const context: vscode.ExtensionContext = {
+          subscriptions: [],
+          logUri: vscode.Uri.file(path.join(os.tmpdir(), "input")),
+        } as unknown as vscode.ExtensionContext;
+        Logger.initializeLogger(context, "Input");
+
+        const debugLog = Sinon.spy(Logger.getLogger(), "debug");
+
+        // trigger method for reload button press
+        const onDidTriggerButtonStub = Sinon.stub(quickPickWithAccept, "onDidTriggerButton");
+
+        const loadingQuickPick = new LoadingQuickPick({
+          name: "loadingQuickPick",
+          title: "My title",
+          loadingTitle: "My loading title",
+          generateItems: () => [{ label: "normal item" }],
+          reloadItems: pElement.reloadItems,
+          reloadTooltip: "my reload tooltip",
+        });
+
+        await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
+
+        assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
+
+        validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
+
+        // Trigger the reload
+        onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
+
+        // advance the clock 2 ms, to trigger the callback in the setTimeout
+        await clock.tickAsync(2);
+
+        // assert that all loading was done
+        validateResults(true, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
+
+        // check that the reload was logged
+        Sinon.assert.calledTwice(debugLog);
+        Sinon.assert.callOrder(
+          debugLog.withArgs({ message: "Reload triggered for My title" }),
+          debugLog.withArgs({ message: "Reload done for My title" })
+        );
+
+        // assert that the reload item was loaded
+        assert.strictEqual(
+          pElement.expected,
+          quickPickWithAccept.items.map((pItem) => pItem.label).join(""),
+          "items after reload"
+        );
+
+        Sinon.assert.calledOnce(createQuickPick);
+
+        debugLog.restore();
+        onDidTriggerButtonStub.restore();
       });
-
-      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
-
-      assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
-
-      validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
-
-      // Trigger the reload
-      onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
-
-      // advance the clock 2 ms, to trigger the callback in the setTimeout
-      await clock.tickAsync(2);
-
-      // assert that all loading was done
-      validateResults(true, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
-
-      // check that the reload was logged
-      Sinon.assert.calledTwice(debugLog);
-      Sinon.assert.callOrder(
-        debugLog.withArgs({ message: "Reload triggered for My title" }),
-        debugLog.withArgs({ message: "Reload done for My title" })
-      );
-
-      // assert that the reload item was loaded
-      assert.strictEqual(
-        "reload item",
-        quickPickWithAccept.items.map((pItem) => pItem.label).join(""),
-        "items after reload"
-      );
-
-      Sinon.assert.calledOnce(createQuickPick);
-
-      debugLog.restore();
-      onDidTriggerButtonStub.restore();
     });
   });
 });
