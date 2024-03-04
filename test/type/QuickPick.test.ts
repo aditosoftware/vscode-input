@@ -1,7 +1,8 @@
 import Sinon from "sinon";
-import { DialogValues, QuickPick, QuickPickItems, QuickPickOptions } from "../../src";
+import { DialogValues, QuickPick } from "../../src";
 import * as vscode from "vscode";
 import assert from "assert";
+import { QuickPickItems } from "../../src/type/GenericQuickPick";
 
 suite("QuickPick tests", () => {
   /**
@@ -149,7 +150,7 @@ suite("QuickPick tests", () => {
  * @param expected - the expected result of the dialog
  * @param quickPick - the quick pick that should be used for showing the dialog
  */
-async function showDialogAndAssert(expected: string[] | undefined, quickPick: QuickPick<QuickPickOptions>) {
+async function showDialogAndAssert(expected: string[] | undefined, quickPick: QuickPick) {
   const result = await quickPick.showDialog(new DialogValues(), 2, 4);
 
   assert.deepStrictEqual(expected, result);

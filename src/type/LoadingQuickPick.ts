@@ -1,11 +1,12 @@
-import { DialogValues, QuickPick, QuickPickItemFunction, QuickPickItems, QuickPickOptions } from "..";
+import { DialogValues } from "..";
 import { Logger } from "@aditosoftware/vscode-logging";
 import * as vscode from "vscode";
+import { GenericQuickPick, GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
 
 /**
  * Any options for loading quick picks
  */
-interface LoadingQuickPickOptions extends QuickPickOptions {
+interface LoadingQuickPickOptions extends GenericQuickPickOptions {
   /**
    * The title that should be shown during the loading.
    */
