@@ -4,7 +4,7 @@ This is used to add a simple and easy to use input elements to any VS Code exten
 
 These input elements should be used for any multi step inputs.
 
-TODO Screenshots
+TODO Screenshots (open dialog on wsl?)
 
 ## Installation
 
@@ -16,10 +16,9 @@ After you have added the repository to your project, you can install it normally
 npm i @aditosoftware/vscode-input
 ```
 
-TODO beforeinput / afterinput
+## Usage
 
-
-## Basic Usage
+### Basic Usage
 
 Before you can start using any multi step inputs, you need to initialize the logging via `initializeLogger`. This can be done in your `activate` function of the extension.
 
@@ -42,7 +41,7 @@ async function callMyDialog() {
 }
 ```
 
-## Handle the result
+### Handle the result
 
 The result can be either `undefined` (when any input was cancelled or a confirmation dialog was not confirmed) or an object of the class `DialogValues` (when every input has an value).
 
@@ -51,6 +50,8 @@ The attribute `uri` of the `DialogValues` will be never filled from this depende
 The attribute `confirmation` of the `DialogValues` will be only filled, when the input type `ConfirmationDialog` was there. You do not need to read this value, because no confirmation will result in a `undefined` result.
 
 The attribute `inputValues` holds all inputs that were made during the dialog. For reading the `inputValues`, you need the `name` of any [component](#components). All the values will be given as `string[]`, even if the input was just a string.
+
+### TODO beforeinput / afterinput
 
 ## Components
 
@@ -64,8 +65,6 @@ Show a confirm dialog. This should be used as a last step of the multi-step-inpu
 
 The dialog itself will be shown in the foreground and looks OS specific.
 
-TODO Screenshot
-
 ```typescript
 new ConfirmationDialog({
     name: "Confirmation",
@@ -75,13 +74,19 @@ new ConfirmationDialog({
   }),
 ```
 
+This code will lead the following input:
+
+| Windows                                                   | macOs                                               |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| ![dialog on windows](media/confirmationDialogWindows.png) | ![dialog on macOs](media/confirmationDialogMac.png) |
+
+You can see that in both cases, it is an os specific dialog. The position of the buttons can not be changed.
+
 ### Input Box
 
 Lets the user enter a text value. The result will be always a string. In the example below you can see how to extract the value from the result.
 
 This input box is highly customable. That means, you have every option from `vscode.InputBoxOptions` available in the attribute `inputBoxOptions`. If no `title` was given, then a generic title will be used.
-
-TODO Screenshot
 
 Example for a multi step input with two input boxes:
 
@@ -107,9 +112,19 @@ if (result) {
   const userName = result.inputValues.get("userName")?.[0];
   const fileName = result.inputValues.get("fileName")?.[0];
 
-  // TODO handle result
+  // handle result
 }
 ```
+
+This code will lead the following input:
+
+#### `userName` input without an title
+
+![userName input](media/inputBoxNoTitle.png)
+
+#### `fileName` input with an title
+
+![fileName input](media/inputBoxTitle.png)
 
 ### Loading Quick Pick
 
@@ -120,8 +135,6 @@ Since `LoadingQuickPick` extends [Quick Pick](#quick-pick), some options are the
 Additionally, you can give an additional `reloadItems` function to reload your items. If you do not give a separate function, then `generateItems` will be used to reload the items.
 
 During the loading, the `loadingTitle` will be visible. For your reload button, you can customize the tooltip with the `reloadTooltip`.
-
-// TODO gif
 
 ```typescript
 new LoadingQuickPick({
@@ -149,17 +162,20 @@ new LoadingQuickPick({
 });
 ```
 
-### Open Dialog
+This will produce the following input:
 
-FIXME ! Mac
-TODO bilder
+![loading quick pick](media/loadingQuickPick.gif)
+
+You can see here the custom reload tooltip. During the loading, you can see the loading spinner (above the first option and below the input) as well as a custom loading title and placeholder.
+
+### Open Dialog
 
 Shows an OS specific file chooser to select any number of files and folders.
 
 You can give any options to the open dialog of vscode by using the `openDialogOptions`.
 If no `title` is given, then a default title will be used.
 
-**NOTE**: The `title` will not be visible on MacOS. Therefore, you should not write any important information in the title.
+**NOTE**: The `title` will not be visible on macOS. Therefore, you should not write any important information in the title.
 
 ```typescript
 new OpenDialog({
@@ -176,6 +192,30 @@ new OpenDialog({
   },
 }),
 ```
+
+#### Open dialog for `chooseAnyFile`
+
+You can see here that you can choose any file you want. On Windows, you can see the title `Select a File (Step 1 of 3)` which can not be seen on macOs.
+
+##### Windows
+
+![open dialog with all file types on windows](media/openDialogAllFilesWindows.png)
+
+##### macOS
+
+![open dialog with all file types on macOS](media/openDialogAllFilesMac.png)
+
+#### Open dialog for `chooseTextFile`
+
+You can see here that the dialog is restricted to `txt` files. On Windows, you can see the title `Select a File (Step 2 of 3)` which can not be seen on macOs.
+
+##### Windows
+
+![open dialog with txt file types on windows](media/openDialogFileFilterWindows.png)
+
+##### macOS
+
+![open dialog with txt file types on macOS](media/openDialogFileFilterMac.png)
 
 ### Quick Pick
 
@@ -200,7 +240,8 @@ new QuickPick({
 });
 ```
 
-// TODO picture
+This code will lead the following input:
+![quick pick](media/quickPick.png)
 
 ### Own Components
 
