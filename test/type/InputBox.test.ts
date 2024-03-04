@@ -23,6 +23,17 @@ suite("InputBox Tests", () => {
   });
 
   /**
+   * Tests that `showDialog` works correctly, when no `inputBoxOptions` (and therefore no title) is provided.
+   */
+  test("showDialog should work correctly, if no inputBoxOptions are provided", async () => {
+    const inputBox = new InputBox({ name: "Unit" });
+
+    await inputBox.showDialog(new DialogValues(), 2, 4);
+
+    Sinon.assert.calledWithMatch(showInputBoxStub, { title: "Choose a value (Step 2 of 4)" });
+  });
+
+  /**
    * Tests that a dummy title is created when no title is provided.
    */
   test("showDialog should create correct title when no title is provided", async () => {

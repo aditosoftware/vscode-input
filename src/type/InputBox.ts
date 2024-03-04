@@ -8,14 +8,13 @@ interface InputBoxOptions extends InputBaseOptions {
   /**
    * Any vscode options for the input box.
    */
-  readonly inputBoxOptions: vscode.InputBoxOptions;
+  readonly inputBoxOptions?: vscode.InputBoxOptions;
 }
 
 /**
  * Input for any free text.
  */
 export class InputBox extends InputBase<InputBoxOptions> {
-
   async showDialog(
     _currentResults: DialogValues,
     currentStep: number,
@@ -24,7 +23,7 @@ export class InputBox extends InputBase<InputBoxOptions> {
     const stepOutput = this.generateStepOutput(currentStep, maximumStep);
 
     // copy the options, so they will not persist during multiple dialogs
-    const options = { ...this.inputOptions.inputBoxOptions };
+    const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
     if (options.title) {
       // add the step indicator to the title
       options.title += ` ${stepOutput}`;
