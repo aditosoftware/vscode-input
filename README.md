@@ -4,8 +4,6 @@ This is used to add a simple and easy to use input elements to any VS Code exten
 
 These input elements should be used for any multi step inputs.
 
-TODO Screenshots (open dialog on wsl?)
-
 ## Installation
 
 This module is published at [GitLab](https://gitlab.adito.de/plattform/designer/vscode-input/-/packages) and [Nexus](https://nexus.adito.cloud/#browse/browse:xrm). Please check the corresponding sites on how to add the npm repository to your project.
@@ -20,7 +18,22 @@ npm i @aditosoftware/vscode-input
 
 ### Basic Usage
 
+Your project is expected to have any dependency to [@aditosoftware/vscode-logging](https://gitlab.adito.de/plattform/designer/vscode-logging) and configure it accordingly.
+
 Before you can start using any multi step inputs, you need to initialize the logging via `initializeLogger`. This can be done in your `activate` function of the extension.
+
+```typescript
+import * as vscode from "vscode";
+import { Logger } from "@aditosoftware/vscode-logging";
+import { initializeLogger } from "@aditosoftware/vscode-input";
+
+export async function activate(context: vscode.ExtensionContext) {
+  // initialize the logger
+  Logger.initializeLogger(context, "NameOfYourExtension");
+  // and pass the logger to the input
+  initializeLogger(Logger.getLogger());
+}
+```
 
 The basic usage is to define the [components](#components) that should be used for the multi step input, then call the `handleMultiStepInput`, which goes through the array of components and show them step by step and then [handle the result](#handle-the-result) given by the dialog.
 
@@ -51,7 +64,14 @@ The attribute `confirmation` of the `DialogValues` will be only filled, when the
 
 The attribute `inputValues` holds all inputs that were made during the dialog. For reading the `inputValues`, you need the `name` of any [component](#components). All the values will be given as `string[]`, even if the input was just a string.
 
-### TODO beforeinput / afterinput
+### Custom actions before and after a component
+
+You can make custom action before and after every input.
+
+If you want your step only be shown at specific circumstances, e.g. when a specific previous dialog value was selected, then you can use `beforeInput` in your options. If the function returns `false`, then this component will be skipped.
+The step count will be adjusted accordingly. If you have a multi step input with 3 steps, and the second step will be skipped, then the count will be `Step 1 of 3` (for the first element) and `Step 2 of 2` (for the third element).
+
+If you want to manipulate your input data after an input was made, you can use `afterInput`. This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
 
 ## Components
 
@@ -80,11 +100,11 @@ This code will lead the following input:
 | --------------------------------------------------------- | --------------------------------------------------- |
 | ![dialog on windows](media/confirmationDialogWindows.png) | ![dialog on macOs](media/confirmationDialogMac.png) |
 
-You can see that in both cases, it is an os specific dialog. The position of the buttons can not be changed.
+You can see that in both cases, it is an os specific dialog. The position of the buttons can not be changed and may be different depending on the OS.
 
 ### Input Box
 
-Lets the user enter a text value. The result will be always a string. In the example below you can see how to extract the value from the result.
+Let the user enter a text value. The result will be always a `string`. In the example below you can see how to extract the value from the result.
 
 This input box is highly customable. That means, you have every option from `vscode.InputBoxOptions` available in the attribute `inputBoxOptions`. If no `title` was given, then a generic title will be used.
 
@@ -120,9 +140,13 @@ This code will lead the following input:
 
 #### `userName` input without an title
 
+Here you can see, that a generic title was created.
+
 ![userName input](media/inputBoxNoTitle.png)
 
 #### `fileName` input with an title
+
+Here you can see, that the given title was used.
 
 ![fileName input](media/inputBoxTitle.png)
 
