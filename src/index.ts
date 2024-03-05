@@ -7,4 +7,4 @@ export * from "./type/quickPick/GenericQuickPick";
 export * from "./type/quickPick/QuickPick";
 export * from "./type/quickPick/LoadingQuickPick";
 export * from "./DialogValues";
-export * from "./handleMultiStepInput";
+export { initializeLogger, handleMultiStepInput } from "./handleMultiStepInput";

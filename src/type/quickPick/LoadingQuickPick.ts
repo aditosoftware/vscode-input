@@ -1,28 +1,34 @@
-import { DialogValues, logger } from "../..";
+import { DialogValues } from "../..";
 import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
 import { GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
+import { logger } from "../../handleMultiStepInput";
 
 /**
- * Any options for loading quick picks
+ * Namespace for any loading quick pick
  */
-interface LoadingQuickPickOptions extends GenericQuickPickOptions {
+export namespace LoadingQuickPick {
   /**
-   * The title that should be shown during the loading.
+   * Any options for loading quick picks
    */
-  readonly loadingTitle: string;
+  export interface LoadingQuickPickOptions extends GenericQuickPickOptions {
+    /**
+     * The title that should be shown during the loading.
+     */
+    readonly loadingTitle: string;
 
-  /**
-   * The function that is used for reload any data.
-   * This can be different from the normal data generate function (`generateItems`).
-   * If you do not give any function, then `generateItems` will be used to reload the items.
-   */
-  readonly reloadItems?: QuickPickItemFunction;
+    /**
+     * The function that is used for reload any data.
+     * This can be different from the normal data generate function (`generateItems`).
+     * If you do not give any function, then `generateItems` will be used to reload the items.
+     */
+    readonly reloadItems?: QuickPickItemFunction;
 
-  /**
-   *  The tooltip that should be shown when reloading
-   */
-  readonly reloadTooltip: string;
+    /**
+     *  The tooltip that should be shown when reloading
+     */
+    readonly reloadTooltip: string;
+  }
 }
 
 /**
@@ -31,7 +37,7 @@ interface LoadingQuickPickOptions extends GenericQuickPickOptions {
  * For example, if your loading takes 20 seconds, you should use this input over QuickPick, because this will notify the user about the loading process.
  * If you don't have any data that needs loading or your data is expected to have a very short loading time, then you should use QuickPick
  */
-export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPickOptions> {
+export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQuickPickOptions> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,

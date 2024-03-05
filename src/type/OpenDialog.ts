@@ -2,19 +2,24 @@ import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 
 /**
- * Any options for Open Dialogs.
+ * Namespace for any open dialogs
  */
-interface OpenDialogOptions extends InputBaseOptions {
+export namespace OpenDialog {
   /**
-   * Any vscode options for the open dialog
+   * Any options for Open Dialogs.
    */
-  readonly openDialogOptions: vscode.OpenDialogOptions;
+  export interface OpenDialogOptions extends InputBaseOptions {
+    /**
+     * Any vscode options for the open dialog
+     */
+    readonly openDialogOptions: vscode.OpenDialogOptions;
+  }
 }
 
 /**
  * Input for any Open Dialog (files and directory).
  */
-export class OpenDialog extends InputBase<OpenDialogOptions> {
+export class OpenDialog extends InputBase<OpenDialog.OpenDialogOptions> {
   async showDialog(
     _currentResults: DialogValues,
     currentStep: number,

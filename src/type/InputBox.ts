@@ -2,19 +2,24 @@ import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 
 /**
- * The options for the input box.
+ * Namespace for any input box.
  */
-interface InputBoxOptions extends InputBaseOptions {
+export namespace InputBox {
   /**
-   * Any vscode options for the input box.
+   * The options for the input box.
    */
-  readonly inputBoxOptions?: vscode.InputBoxOptions;
+  export interface InputBoxOptions extends InputBaseOptions {
+    /**
+     * Any vscode options for the input box.
+     */
+    readonly inputBoxOptions?: vscode.InputBoxOptions;
+  }
 }
 
 /**
  * Input for any free text.
  */
-export class InputBox extends InputBase<InputBoxOptions> {
+export class InputBox extends InputBase<InputBox.InputBoxOptions> {
   async showDialog(
     _currentResults: DialogValues,
     currentStep: number,
