@@ -8,7 +8,7 @@ export let logger: Logger;
 
 /**
  * Initializes the logging for the multi step input. This needs to be done once.
- * 
+ *
  * @param pLogger - the logger that should be used for every logging
  */
 export function initializeLogger(pLogger: Logger) {
@@ -37,7 +37,7 @@ export async function handleMultiStepInput(
 
   for (const input of inputs) {
     // check if input is needed
-    if (!input.inputOptions.beforeInput || input.inputOptions.beforeInput(dialogValues)) {
+    if (!input.inputOptions.onBeforeInput || input.inputOptions.onBeforeInput(dialogValues)) {
       // if needed, then show dialog
       const result = await input.showDialog(dialogValues, currentStep, totalNumber);
 
@@ -50,8 +50,8 @@ export async function handleMultiStepInput(
       dialogValues.addValue(input.inputOptions.name, result);
 
       // if there is some special behavior after the input, handle it
-      if (input.inputOptions.afterInput) {
-        input.inputOptions.afterInput(dialogValues);
+      if (input.inputOptions.onAfterInput) {
+        input.inputOptions.onAfterInput(dialogValues);
       }
 
       currentStep++;

@@ -18,7 +18,7 @@ export interface InputBaseOptions {
    * @param dialogValues - the current values of the dialog
    * @returns `true` if the dialog should be shown, `false`, if this dialog should be skipped
    */
-  readonly beforeInput?: (dialogValues: DialogValues) => boolean;
+  readonly onBeforeInput?: (dialogValues: DialogValues) => boolean;
 
   /**
    * Function that should be executed after the input was shown and the new value was saved into the dialog values.
@@ -27,7 +27,7 @@ export interface InputBaseOptions {
    *
    * @param dialogValues - the current values of the dialog
    */
-  readonly afterInput?: (dialogValues: DialogValues) => void;
+  readonly onAfterInput?: (dialogValues: DialogValues) => void;
 }
 
 /**

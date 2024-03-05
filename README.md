@@ -68,10 +68,10 @@ The attribute `inputValues` holds all inputs that were made during the dialog. F
 
 You can make custom action before and after every input.
 
-If you want your step only be shown at specific circumstances, e.g. when a specific previous dialog value was selected, then you can use `beforeInput` in your options. If the function returns `false`, then this component will be skipped.
+If you want your step only be shown at specific circumstances, e.g. when a specific previous dialog value was selected, then you can use `onBeforeInput` in your options. If the function returns `false`, then this component will be skipped.
 The step count will be adjusted accordingly. If you have a multi step input with 3 steps, and the second step will be skipped, then the count will be `Step 1 of 3` (for the first element) and `Step 2 of 2` (for the third element).
 
-If you want to manipulate your input data after an input was made, you can use `afterInput`. This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
+If you want to manipulate your input data after an input was made, you can use `onAfterInput`. This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
 
 ## Components
 

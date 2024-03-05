@@ -54,10 +54,10 @@ suite("handleMultiStepInput test", () => {
     firstElement = new TestElement(new InputBox({ name: "firstElement", inputBoxOptions: {} }));
     secondElement = new TestElement(new InputBox({ name: "secondElement", inputBoxOptions: {} }));
     beforeInputTrue = new TestElement(
-      new InputBox({ name: "beforeInputTrue", inputBoxOptions: {}, beforeInput: () => true })
+      new InputBox({ name: "beforeInputTrue", inputBoxOptions: {}, onBeforeInput: () => true })
     );
     beforeInputFalse = new TestElement(
-      new InputBox({ name: "beforeInputFalse", inputBoxOptions: {}, beforeInput: () => false })
+      new InputBox({ name: "beforeInputFalse", inputBoxOptions: {}, onBeforeInput: () => false })
     );
   });
 
@@ -221,7 +221,7 @@ suite("handleMultiStepInput test", () => {
     const inputBox = new InputBox({
       name: name,
       inputBoxOptions: {},
-      afterInput: (dialogValues: DialogValues) => {
+      onAfterInput: (dialogValues: DialogValues) => {
         afterInput = dialogValues.inputValues;
       },
     });
