@@ -1,5 +1,5 @@
 import { DialogValues, InputBaseOptions } from "../..";
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 /**
  * The type of the function to generate the items for the quickPick.
@@ -12,6 +12,9 @@ export type QuickPickItemFunction = (
   currentResults: DialogValues
 ) => Promise<QuickPickItems> | Promise<vscode.QuickPickItem[]> | vscode.QuickPickItem[];
 
+/**
+ * The options used for any quick pick.
+ */
 export interface GenericQuickPickOptions extends InputBaseOptions {
   /**
    *  The title of the quick pick.

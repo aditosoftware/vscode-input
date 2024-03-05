@@ -9,6 +9,7 @@ export interface InputBaseOptions {
    * This should be unique among all inputs from one multi-step input.
    */
   readonly name: string;
+
   /**
    * Function that should be executed before the input is shown.
    *

@@ -30,7 +30,7 @@ export class OpenDialog extends InputBase<OpenDialogOptions> {
       options.title = `Select a ${options.canSelectFolders ? "Directory" : "File"} ${stepOutput}`;
     }
 
-    return await vscode.window.showOpenDialog(options).then((uri) => {
+    return vscode.window.showOpenDialog(options).then((uri) => {
       if (uri && uri.length !== 0) {
         // get from any uri the fileSystem path
         return uri.map((pElement) => pElement.fsPath);

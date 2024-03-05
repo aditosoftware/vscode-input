@@ -78,7 +78,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPickOptions> 
     this.handlePostLoading(quickPick, currentStep, maximumStep, data);
 
     // Wait for user input or cancellation
-    return await new Promise<string[] | undefined>((resolve) => {
+    return new Promise<string[] | undefined>((resolve) => {
       quickPick.onDidAccept(() => {
         resolve(quickPick.selectedItems.map((pSelected) => pSelected.label));
         quickPick.dispose();

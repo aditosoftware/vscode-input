@@ -32,6 +32,6 @@ export class InputBox extends InputBase<InputBoxOptions> {
       options.title = `Choose a value ${stepOutput}`;
     }
 
-    return await vscode.window.showInputBox(options);
+    return vscode.window.showInputBox(options);
   }
 }
