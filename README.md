@@ -1,187 +1,283 @@
-# vscode-logging
+# vscode-input
 
-This is used to add a simple and easy to use logging to any VS Code extension.
+This is used to add a simple and easy to use input elements to any VS Code extension.
 
-The key idea is that you do not need to call `vscode.window.showInformationMessage` (or similar methods) and do not need to write any additional logs, because this module will take care of everything.
-
-Uncaught exceptions and uncaught rejects are logged as well.
+These input elements should be used for any multi step inputs.
 
 ## Installation
 
-This module is published at [GitLab](https://gitlab.adito.de/plattform/designer/vscode-logging/-/packages) and [Nexus](https://nexus.adito.cloud/#browse/browse:xrm). Please check the corresponding sites on how to add the npm repository to your project.
+This module is published at [GitLab](https://gitlab.adito.de/plattform/designer/vscode-input/-/packages) and [Nexus](https://nexus.adito.cloud/#browse/browse:xrm). Please check the corresponding sites on how to add the npm repository to your project.
 
 After you have added the repository to your project, you can install it normally.
 
 ```shell
-npm i @aditosoftware/vscode-logging
+npm i @aditosoftware/vscode-input
 ```
 
 ## Usage
 
-### Initialization of the Logger
+### Basic Usage
 
-The logger needs to be initialized once in your `activate` method. The name given will be used for the [main logging file](#normal-log-file-namelog).
+Your project is expected to have any dependency to [@aditosoftware/vscode-logging](https://gitlab.adito.de/plattform/designer/vscode-logging) and configure it accordingly.
+
+Before you can start using any multi step inputs, you need to initialize the logging via `initializeLogger`. This can be done in your `activate` function of the extension.
 
 ```typescript
-export function activate(context: vscode.ExtensionContext) {
-  Logger.initializeLogger(context, "MyExtensionName");
+import * as vscode from "vscode";
+import { Logger } from "@aditosoftware/vscode-logging";
+import { initializeLogger } from "@aditosoftware/vscode-input";
+
+export async function activate(context: vscode.ExtensionContext) {
+  // initialize the logger
+  Logger.initializeLogger(context, "NameOfYourExtension");
+  // and pass the logger to the input
+  initializeLogger(Logger.getLogger());
 }
 ```
 
-After you have initialized the logger, you can get an instance and log.
+The basic usage is to define the [components](#components) that should be used for the multi step input, then call the `handleMultiStepInput`, which goes through the array of components and show them step by step and then [handle the result](#handle-the-result) given by the dialog.
 
-### Logging
-
-After the [initialization](#initialization-of-the-logger), you can get any logger instance via `Logger.getLogger()`. On this instance, you can call any log methods.
-
-#### How to log
-
-##### Basic logging
-
-The logger can log to four different levels:
-
-- debug
-- info
-- warn
-- error
-
-All four levels are written to the logging file, and all levels except debug are written [the output channel](#output-channel) and can [notify the user](#notify-the-user).
-
-A normal minimal logging call can look like this:
+This can be an example call order of the multi step input.
+You can use this example. The only things you need to do is to fill the [components](#components) and [handle the result](#handle-the-result).
 
 ```typescript
-import { Logger } from "@aditosoftware/vscode-logging";
+async function callMyDialog() {
+  // The components that should be shown
+  const components = [];
 
-const logger: Logger = Logger.getLogger();
+  // call the multi step input
+  const result = await handleMultiStepInput(components);
 
-logger.debug({ message: "my debug message" });
-logger.info({ message: "my info message" });
-logger.warn({ message: "my warn message" });
-logger.error({ message: "my error message" });
+  if (result) {
+    // handle the result
+  }
+}
 ```
 
-##### Logging from a webview
+### Handle the result
 
-You can not call any logging methods from the webview directly. Instead, you need to transfer the log data to your extension and log it there. This minimal example assumes you know how to [transfer data from a webview to an extension](https://code.visualstudio.com/api/extension-guides/webview#passing-messages-from-a-webview-to-an-extension). Please be aware that transferring data can look a bit different from use case to use case.
+The result can be either `undefined` (when any input was cancelled or a confirmation dialog was not confirmed) or an object of the class `DialogValues` (when every input has an value).
 
-For this use case, you can use `LoggingMessageWithLevel` to pass the data from the webview to the extension.
+The attribute `uri` of the `DialogValues` will be never filled from this dependency. Instead, you can fill it before calling the dialog as an additional information, if the dialog was called on a file / folder.
 
-In your webview, you could transfer the message as following:
+The attribute `confirmation` of the `DialogValues` will be only filled, when the input type `ConfirmationDialog` was there. You do not need to read this value, because no confirmation will result in a `undefined` result.
+
+The attribute `inputValues` holds all inputs that were made during the dialog. For reading the `inputValues`, you need the `name` of any [component](#components). All the values will be given as `string[]`, even if the input was just a string.
+
+### Custom actions before and after a component
+
+You can make custom action before and after every input.
+
+If you want your step only be shown at specific circumstances, e.g. when a specific previous dialog value was selected, then you can use `onBeforeInput` in your options. If the function returns `false`, then this component will be skipped.
+The step count will be adjusted accordingly. If you have a multi step input with 3 steps, and the second step will be skipped, then the count will be `Step 1 of 3` (for the first element) and `Step 2 of 2` (for the third element).
+
+If you want to manipulate your input data after an input was made, you can use `onAfterInput`. This can be for example used, if you get a value from any dialog values normal input that should be used as an uri instead.
+
+## Components
+
+All components have one constructor, which takes `<ComponentName>Options`. These options are explained in the documentation of the corresponding component.
+
+**Note:** The `name` attribute needs to be always there. This is used to assign the inputted values in the `DialogValues`. Therefore, the name need to be unique for every component in a multi step input. However, you can reuse the name among different multi step inputs.
+
+### Confirmation Dialog
+
+Show a confirm dialog. This should be used as a last step of the multi-step-input to confirm any destructive options (e.g. deletion).
+
+The dialog itself will be shown in the foreground and looks OS specific.
 
 ```typescript
-// Build the logging message
-const data: LoggingMessageWithLevel = {
-  // you need to give the level which yor message should have
-  level: "info",
-  message: "my message from webview",
-};
-
-// and post it to your extension
-vscodeApiWrapper.postMessage(data);
+new ConfirmationDialog({
+    name: "Confirmation",
+    message: "My message",
+    detail: (dialogValues: DialogValues) => `Detail: ${dialogValues.inputValues.size}`,
+    confirmButtonName: "Confirm Delete",
+  }),
 ```
 
-All other parameters from `LoggingMessage` are also valid.
+This code will lead the following input:
 
-Then you could receive the message in your extension and log via the `log` method.
+| Windows                                                   | macOs                                               |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| ![dialog on windows](media/confirmationDialogWindows.png) | ![dialog on macOs](media/confirmationDialogMac.png) |
+
+You can see that in both cases, it is an os specific dialog. The position of the buttons can not be changed and may be different depending on the OS.
+
+### Input Box
+
+Let the user enter a text value. The result will be always a `string`. In the example below you can see how to extract the value from the result.
+
+This input box is highly customable. That means, you have every option from `vscode.InputBoxOptions` available in the attribute `inputBoxOptions`. If no `title` was given, then a generic title will be used.
+
+Example for a multi step input with two input boxes:
 
 ```typescript
-private _setWebviewMessageListener(webview: Webview) {
-  webview.onDidReceiveMessage(
-    (message: unknown) => {
+const components = [
+  // This box will use a generic title
+  new InputBox({
+    name: "userName",
+  }),
+  // This box has a title given
+  new InputBox({
+    name: "fileName",
+    inputBoxOptions: {
+      title: "Please input a file name",
+    },
+  }),
+];
 
-      // receive the data
-      const data: LoggingMessageWithLevel = message as LoggingMessageWithLevel;
+const result = await handleMultiStepInput(components);
 
-      // and log it
-      Logger.getLogger().log(data);
+if (result) {
+  // getting the results of the input values
+  const userName = result.inputValues.get("userName")?.[0];
+  const fileName = result.inputValues.get("fileName")?.[0];
+
+  // handle result
+}
+```
+
+This code will lead the following input:
+
+#### `userName` input without an title
+
+Here you can see, that a generic title was created.
+
+![userName input](media/inputBoxNoTitle.png)
+
+#### `fileName` input with an title
+
+Here you can see, that the given title was used.
+
+![fileName input](media/inputBoxTitle.png)
+
+### Loading Quick Pick
+
+This component is similar to [Quick Pick](#quick-pick), but adds a better loading handling. You should use this component, if you want a quick pick with loading and reloading abilities. This should be also used, if your load method takes a while.
+
+Since `LoadingQuickPick` extends [Quick Pick](#quick-pick), some options are the same and not described here.
+
+Additionally, you can give an additional `reloadItems` function to reload your items. If you do not give a separate function, then `generateItems` will be used to reload the items.
+
+During the loading, the `loadingTitle` will be visible. For your reload button, you can customize the tooltip with the `reloadTooltip`.
+
+```typescript
+new LoadingQuickPick({
+  name: "foodPreference",
+  title: "Select your food preference",
+  generateItems: () => [
+    { label: "Meat", description: "Eat any kind of meat" },
+    { label: "Fish", description: "Eat any kind of fish" },
+    { label: "Vegetarian", description: "Eat no meat and fish, but animal products like milk" },
+    { label: "Vegan", description: "Eat no animal products" },
+  ],
+  loadingTitle: "Loading of food preferences is in progress",
+  // long running function to reload the items
+  reloadItems: async () => {
+    const foodPreferences: string[] = await queryWebsiteForFoodPreferences();
+
+    return foodPreferences.map((pPreference) => {
+      const item: vscode.QuickPickItem = {
+        label: pPreference,
+      };
+      return item;
     });
-}
+  },
+  reloadTooltip: "Reload food preferences",
+});
 ```
 
-#### Logging options
+This will produce the following input:
 
-##### Notify the user
+![loading quick pick](media/loadingQuickPick.gif)
 
-If you want to notify the user about your message as well, you need to set the `notifyUser` flag.
-If this flag is set to `true`, then the message will show as:
+You can see here the custom reload tooltip. During the loading, you can see the loading spinner (above the first option and below the input) as well as a custom loading title and placeholder.
 
-- information message when logging to level info
-- warning message when logging to level warn
-- error message when logging to level error
+### Open Dialog
 
-Note: It will not show any message to the user, if your level is debug.
+Shows an OS specific file chooser to select any number of files and folders.
 
-If you don't set this option, then the user will not be notified.
+You can give any options to the open dialog of vscode by using the `openDialogOptions`.
+If no `title` is given, then a default title will be used.
+
+**NOTE**: The `title` will not be visible on macOS. Therefore, you should not write any important information in the title.
 
 ```typescript
-logger.info({ message: "my info message", notifyUser: true });
+new OpenDialog({
+  name: "chooseAnyFile",
+  openDialogOptions: {},
+}),
+new OpenDialog({
+  name: "chooseTextFile",
+  openDialogOptions: {
+    title: "Select any text file",
+    filters: {
+      Text: ["txt"],
+    },
+  },
+}),
 ```
 
-##### Add stack traces to the log
+#### Open dialog for `chooseAnyFile`
 
-Messages that are logged on error level, can log a stack trace as well.
+You can see here that you can choose any file you want. On Windows, you can see the title `Select a File (Step 1 of 3)` which can not be seen on macOs.
 
-The `stack` information from the `error` will be logged. These information will only show in the log files and output channel and never in any notification to the user.
+##### Windows
+
+![open dialog with all file types on windows](media/openDialogAllFilesWindows.png)
+
+##### macOS
+
+![open dialog with all file types on macOS](media/openDialogAllFilesMac.png)
+
+#### Open dialog for `chooseTextFile`
+
+You can see here that the dialog is restricted to `txt` files. On Windows, you can see the title `Select a File (Step 2 of 3)` which can not be seen on macOs.
+
+##### Windows
+
+![open dialog with txt file types on windows](media/openDialogFileFilterWindows.png)
+
+##### macOS
+
+![open dialog with txt file types on macOS](media/openDialogFileFilterMac.png)
+
+### Quick Pick
+
+Any drop down for selecting one or multiple values.
+
+To set the items, you need to use the `generateItems` attribute. Here you can give either a sync or async function to load any data. These function can either return `<vscode.QuickPickItem[]` or `QuickPickItems`, which can be used to set a custom additional title after the loading.
+
+If you want a quick pick with loading, you should use [Loading Quick Pick](#loading-quick-pick).
+
+A basic quick pick can look as following:
 
 ```typescript
-import { Logger } from "@aditosoftware/vscode-logging";
-
-try {
-  // any operation that can cause error
-} catch (error) {
-  Logger.getLogger().error({
-    message: "error while trying to do XXX",
-    error: error,
-  });
-}
+new QuickPick({
+  name: "foodPreference",
+  title: "Select your food preference",
+  generateItems: () => [
+    { label: "Meat", description: "Eat any kind of meat" },
+    { label: "Fish", description: "Eat any kind of fish" },
+    { label: "Vegetarian", description: "Eat no meat and fish, but animal products like milk" },
+    { label: "Vegan", description: "Eat no animal products" },
+  ],
+});
 ```
 
-## Logging locations
+This code will lead the following input:
+![quick pick](media/quickPick.png)
 
-The logger can write to various locations. These are all active by default.
+### Own Components
 
-### Output channel
+You can write your own components by either extending `InputBase` or any of the existing classes.
 
-Every logging message of the levels info, warn and error are logged to the output channel.
+Here is a checklist of what needs to be considered when making a new input:
 
-If you want to open the output channel of the logs, you can use `logger.showOutputChannel`.
-
-This can be used, if you have many information logs that were written during a command execution and at the end you have an error, which the user should be able to inspect.
-
-```typescript
-import { Logger } from "@aditosoftware/vscode-logging";
-
-const logger: Logger = Logger.getLogger();
-
-// a log of information that was logged to info (and not notify the user)
-
-logger.warn({ message: "execution of the command was not successful", notifyUser: true });
-logger.showOutputChannel();
-```
-
-### Console
-
-If the variable `process.env.NODE_ENV` is not set to `production`, then any message logged to the files will be also logged to the console .
-
-### The log files
-
-After installing the extension, you can execute the command `workbench.action.openExtensionLogsFolder` to open the log folder for all extensions. Navigate in the folder of your extension.
-The folders above your extensions folder and the deletion of old log folders are handled by VS Code.
-
-Inside of this folder are two files: `error.log` and `<Name>.log`.
-
-#### normal log file (`<Name>.log`)
-
-This file's name is dependent on the given name during the initialization of the logger.
-
-This file is the main log file. It has all logs from all levels (debug, info, warn and error).
-
-#### error log file (`error.log`)
-
-This fil only logs messages from the error level.
-
-Additionally, it logs uncaught exceptions and uncaught rejections. Therefore, this log file should be used, if you are trying to find any errors and assume that there might be any uncaught errors.
+- extend the corresponding options in order to pass only one argument in the constructor.
+- make your overwritten `showDialog` function `async`
+- reduce the return arguments from `showDialog` from the given `Promise<string | boolean | string[] | undefined>` to a smaller range, e.g. `Promise<string | undefined>`
+- add the step counter to the title (or any corresponding element) via the `InputBase#generateStepOutput` function.
 
 ## Contribution Notes
 
-The underlying logging framework is [winston](https://github.com/winstonjs/winston), with [winston-transport](https://github.com/winstonjs/winston-transport) used for additional transport methods.
+- Never use `Logger.getLogger()`. Use `logger` from the file `handleMultiStepInput.ts` instead. Otherwise the logging will not work.

@@ -24,7 +24,8 @@
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
-    "tsdoc/syntax": "warn"
+    "tsdoc/syntax": "warn",
+    "@typescript-eslint/no-namespace": "off"
   },
   "ignorePatterns": ["out", "dist", "**/*.d.ts", "build"]
 }
