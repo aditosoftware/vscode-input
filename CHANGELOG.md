@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+### Added
+
+- QuickPick: Added option for placeholder
+
 ## 1.0.0
 
 ### Added
 
-- Initial release for multi step inputs with 
+- Initial release for multi step inputs with
   - ConfirmationDialog
   - InputBox
   - OpenDialog

@@ -1,12 +1,21 @@
-import { DialogValues } from "../..";
+import { DialogValues, GenericQuickPickOptions } from "../..";
 import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
-import { GenericQuickPickOptions } from "./GenericQuickPick";
+
+/**
+ * The options that should be used for any normal quick pick.
+ */
+export interface QuickPickOptions extends GenericQuickPickOptions {
+  /**
+   * The placeholder that should be used for the input
+   */
+  readonly placeholder?: string;
+}
 
 /**
  * Any quick pick that does not require any sort of loading.
  */
-export class QuickPick extends GenericQuickPick<GenericQuickPickOptions> {
+export class QuickPick extends GenericQuickPick<QuickPickOptions> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
@@ -19,7 +28,7 @@ export class QuickPick extends GenericQuickPick<GenericQuickPickOptions> {
       {
         canPickMany: this.inputOptions.allowMultiple,
         title: this.generateTitle(this.inputOptions.title, currentStep, maximumStep, items.additionalTitle),
-        placeHolder: this.generatePlaceholder(),
+        placeHolder: this.inputOptions.placeholder ?? this.generatePlaceholder(),
       }
     );
 

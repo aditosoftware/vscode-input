@@ -143,6 +143,29 @@ suite("QuickPick tests", () => {
       placeHolder: "Select any number of items",
     });
   });
+
+  /**
+   * Tests that a given placeholder will be used correctly.
+   */
+  test("should use placeholder correctly", async () => {
+    const placeholder = "Lorem ipsum";
+
+    const quickPick = new QuickPick({
+      ...basicOptions,
+      placeholder: placeholder,
+      generateItems: () => [],
+    });
+
+    showQuickPickStub.resolves(quickPickItems);
+
+    await showDialogAndAssert(["item1", "item2", "item3"], quickPick);
+
+    Sinon.assert.calledWithExactly(showQuickPickStub, [], {
+      title: "My Title - (Step 2 of 4)",
+      canPickMany: undefined,
+      placeHolder: placeholder,
+    });
+  });
 });
 
 /**
