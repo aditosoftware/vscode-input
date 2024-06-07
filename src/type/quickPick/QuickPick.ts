@@ -3,19 +3,24 @@ import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
 
 /**
- * The options that should be used for any normal quick pick.
+ * Namespace for any normal quick pick
  */
-export interface QuickPickOptions extends GenericQuickPickOptions {
+export namespace QuickPick {
   /**
-   * The placeholder that should be used for the input
+   * The options that should be used for any normal quick pick.
    */
-  readonly placeholder?: string;
+  export interface QuickPickOptions extends GenericQuickPickOptions {
+    /**
+     * The placeholder that should be used for the input
+     */
+    readonly placeholder?: string;
+  }
 }
 
 /**
  * Any quick pick that does not require any sort of loading.
  */
-export class QuickPick extends GenericQuickPick<QuickPickOptions> {
+export class QuickPick extends GenericQuickPick<QuickPick.QuickPickOptions> {
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
