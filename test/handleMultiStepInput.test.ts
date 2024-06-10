@@ -1,5 +1,13 @@
 import assert from "assert";
-import { DialogValues, InputBase, InputBaseOptions, InputBox, handleMultiStepInput, initializeLogger } from "../src";
+import {
+  DialogValues,
+  InputAction,
+  InputBase,
+  InputBaseOptions,
+  InputBox,
+  handleMultiStepInput,
+  initializeLogger,
+} from "../src";
 import Sinon from "sinon";
 import * as vscode from "vscode";
 import path from "path";
@@ -146,6 +154,40 @@ suite("handleMultiStepInput test", () => {
   });
 
   /**
+   * Tests that the going back from the second element works.
+   *
+   * Workflow:
+   * 1. input in `firstElement`
+   * 2. go back in `secondElement`
+   * 3. another input in `firstElement`
+   * 4. input in `secondElement`
+   */
+  test("should work go back", async () => {
+    const firstValues = "myValue";
+    firstElement.showDialogStub.onFirstCall().resolves("not needed first value").onSecondCall().resolves(firstValues);
+
+    const secondValues = ["a", "b", "c"];
+    secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
+
+    const result = await handleMultiStepInput([firstElement.input, secondElement.input]);
+
+    assert.ok(typeof result !== "undefined", "result is there");
+    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
+    assert.deepStrictEqual(
+      new Map<string, string[]>([
+        [firstElement.name, [firstValues]],
+        [secondElement.name, secondValues],
+      ]),
+      result.inputValues
+    );
+
+    Sinon.assert.calledTwice(firstElement.showDialogStub);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 2);
+    Sinon.assert.calledTwice(secondElement.showDialogStub);
+    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+  });
+
+  /**
    * Tests the handling of `beforeInput`.
    */
   suite("handle beforeInput", () => {
@@ -205,6 +247,38 @@ suite("handleMultiStepInput test", () => {
 
       // check that the indexes are adjusted after the skip
       Sinon.assert.calledOnce(secondElement.showDialogStub);
+      Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+    });
+
+    /**
+     * Tests that a middle element will be skipped when one element will be skipped.
+     */
+    test("should skip correctly with go back one element ", async () => {
+      const myValue = "myValue";
+      firstElement.showDialogStub.onFirstCall().resolves("not needed").onSecondCall().resolves(myValue);
+      beforeInputFalse.showDialogStub.resolves(myValue);
+      secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(myValue);
+
+      const result = await handleMultiStepInput([firstElement.input, beforeInputFalse.input, secondElement.input]);
+
+      assert.ok(typeof result !== "undefined", "result is there");
+      assert.strictEqual(undefined, result.confirmation, "no confirmation values");
+      // only the values from first and second box are there
+      assert.deepStrictEqual(
+        new Map<string, string[]>([
+          [firstElement.name, [myValue]],
+          [secondElement.name, [myValue]],
+        ]),
+        result.inputValues
+      );
+
+      Sinon.assert.calledTwice(firstElement.showDialogStub);
+      Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 3);
+
+      Sinon.assert.callCount(beforeInputFalse.showDialogStub, 0);
+
+      // check that the indexes are adjusted after the skip
+      Sinon.assert.calledTwice(secondElement.showDialogStub);
       Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
     });
   });

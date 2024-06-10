@@ -1,4 +1,4 @@
-import { InputBase, DialogValues, InputBaseOptions } from ".";
+import { InputBase, DialogValues, InputBaseOptions, InputAction } from ".";
 import { Logger } from "@aditosoftware/vscode-logging";
 
 /**
@@ -35,7 +35,11 @@ export async function handleMultiStepInput(
 
   let totalNumber: number = inputs.length;
 
-  for (const input of inputs) {
+  let lastStep: { stepNumber: number; index: number } = { stepNumber: 1, index: 0 };
+
+  for (let i = 0; i < inputs.length; i++) {
+    const input = inputs[i];
+
     // check if input is needed
     if (!input.inputOptions.onBeforeInput || input.inputOptions.onBeforeInput(dialogValues)) {
       // if needed, then show dialog
@@ -47,12 +51,22 @@ export async function handleMultiStepInput(
         return;
       }
 
+      if (result === InputAction.BACK) {
+        // if the back button was pressed, set index and step counter to the last valid used elements 
+        i = lastStep.index - 1;
+        currentStep = lastStep.stepNumber;
+        continue;
+      }
+
       dialogValues.addValue(input.inputOptions.name, result);
 
       // if there is some special behavior after the input, handle it
       if (input.inputOptions.onAfterInput) {
         input.inputOptions.onAfterInput(dialogValues);
       }
+
+      // save the last valid step for going back
+      lastStep = { stepNumber: currentStep, index: i };
 
       currentStep++;
     } else {

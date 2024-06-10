@@ -31,6 +31,16 @@ export interface InputBaseOptions {
 }
 
 /**
+ * Indicates, that a action was triggered by the input.
+ */
+export enum InputAction {
+  /**
+   * When the back button was triggered.
+   */
+  BACK = "BACK",
+}
+
+/**
  * Any input for the extension.
  */
 export abstract class InputBase<T extends InputBaseOptions> {
@@ -61,7 +71,7 @@ export abstract class InputBase<T extends InputBaseOptions> {
     currentResults: DialogValues,
     currentStep: number,
     maximumStep: number
-  ): Promise<string | string[] | boolean | undefined>;
+  ): Promise<string | string[] | boolean | undefined | InputAction.BACK>;
 
   /**
    * Generate a step output that will read `(Step <current> of <maximum>)`.
