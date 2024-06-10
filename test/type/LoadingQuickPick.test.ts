@@ -1,6 +1,6 @@
 import Sinon from "sinon";
 import * as vscode from "vscode";
-import { DialogValues, LoadingQuickPick, initializeLogger } from "../../src";
+import { DialogValues, InputAction, LoadingQuickPick, initializeLogger } from "../../src";
 import assert from "assert";
 import { Logger } from "@aditosoftware/vscode-logging";
 import path from "path";
@@ -10,6 +10,13 @@ import os from "os";
  * Tests the loading quick pick.
  */
 suite("LoadingQuickPick tests", () => {
+  /**
+   * The reload button from the dialog
+   */
+  const reloadButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon("sync"),
+    tooltip: "my reload tooltip",
+  };
   /**
    * The stub for creating any quick picks.
    * You need to give the created quick pick with the `returns` function.
@@ -25,6 +32,11 @@ suite("LoadingQuickPick tests", () => {
    * The quick pick element with an dummy `onDidHide` answer.
    */
   let quickPickWithHide: vscode.QuickPick<vscode.QuickPickItem>;
+
+  /**
+   * The quick pick element with a dummy `onDidTriggerButton` answer for the back button.
+   */
+  let quickPickWithOnTriggerBackButton: vscode.QuickPick<vscode.QuickPickItem>;
 
   /**
    * Creates the necessary stubs before each test.
@@ -44,6 +56,13 @@ suite("LoadingQuickPick tests", () => {
     copyElementWithHide.onDidHide = (callback: () => void) => callback();
     // and transforms this any element back to an vscode.QuickPick, so it can be returned by createQuickPick
     quickPickWithHide = copyElementWithHide as vscode.QuickPick<vscode.QuickPickItem>;
+
+    // copies the normal quick again to add an dummy onDidTriggerButton function that will trigger for the back button.
+    const copyElementWithBackButtonTrigger = Object.create(quickPick);
+    copyElementWithBackButtonTrigger.onDidTriggerButton = (callback: (button: vscode.QuickInputButton) => void) =>
+      callback(vscode.QuickInputButtons.Back);
+    // and transforms this any element back to an vscode.QuickPick, so it can be returned by createQuickPick
+    quickPickWithOnTriggerBackButton = copyElementWithBackButtonTrigger as vscode.QuickPick<vscode.QuickPickItem>;
 
     createQuickPick = Sinon.stub(vscode.window, "createQuickPick");
   });
@@ -74,6 +93,27 @@ suite("LoadingQuickPick tests", () => {
     const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 
     assert.deepStrictEqual(undefined, result);
+  });
+
+  /**
+   * Tests that the back button will be correctly triggered
+   */
+  test("should trigger back button correctly", async () => {
+    createQuickPick.returns(quickPickWithOnTriggerBackButton);
+
+    const loadingQuickPick = new LoadingQuickPick({
+      name: "loadingQuickPick",
+      title: "My title",
+      loadingTitle: "My loading title",
+      generateItems: () => [{ label: "normal item" }],
+      reloadItems: () => [],
+      reloadTooltip: "my reload tooltip",
+    });
+
+    await showAndAssert(loadingQuickPick, InputAction.BACK, quickPickWithOnTriggerBackButton, 2, [
+      reloadButton,
+      vscode.QuickInputButtons.Back,
+    ]);
   });
 
   /**
@@ -181,11 +221,33 @@ suite("LoadingQuickPick tests", () => {
         allowMultiple: true,
       });
 
-      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 2, [
+        reloadButton,
+        vscode.QuickInputButtons.Back,
+      ]);
 
       assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
 
       validateResults(false, titleSet, placeholderSet, busySet, enabledSet, "Select any number of items");
+    });
+
+    /**
+     * Tests that there is no back button when it was the first step.
+     */
+    test("should not have back button when first step", async () => {
+      createQuickPick.returns(quickPickWithAccept);
+
+      const loadingQuickPick = new LoadingQuickPick({
+        name: "loadingQuickPick",
+        title: "My title",
+        loadingTitle: "My loading title",
+        generateItems: () => [{ label: "normal item" }],
+        reloadItems: () => [{ label: "reload item" }],
+        reloadTooltip: "my reload tooltip",
+        allowMultiple: true,
+      });
+
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 1, [reloadButton]);
     });
 
     [
@@ -222,23 +284,33 @@ suite("LoadingQuickPick tests", () => {
         // trigger method for reload button press
         const onDidTriggerButtonStub = Sinon.stub(quickPickWithAccept, "onDidTriggerButton");
 
+        const reloadTooltip = "my reload tooltip";
         const loadingQuickPick = new LoadingQuickPick({
           name: "loadingQuickPick",
           title: "My title",
           loadingTitle: "My loading title",
           generateItems: () => [{ label: "normal item" }],
           reloadItems: pElement.reloadItems,
-          reloadTooltip: "my reload tooltip",
+          reloadTooltip,
         });
 
-        await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
+        await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 2, [
+          reloadButton,
+          vscode.QuickInputButtons.Back,
+        ]);
 
         assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
 
         validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
 
+        // get the reload button from all the buttons
+        const foundReloadButton = quickPickWithAccept.buttons
+          .filter((pButton) => pButton.tooltip === reloadTooltip)
+          .shift();
+        assert.ok(foundReloadButton, "reload button should exist");
+
         // Trigger the reload
-        onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
+        onDidTriggerButtonStub.callArgWith(0, foundReloadButton);
 
         // advance the clock 2 ms, to trigger the callback in the setTimeout
         await clock.tickAsync(2);
@@ -273,30 +345,25 @@ suite("LoadingQuickPick tests", () => {
  * Shows the dialog of the quick pick and asserts that are some common values are set.
  * @param loadingQuickPick - the loading quick pick that should be used for showing the dialog
  * @param expectedItems - the expected items that should be returned by the `showDialog` function
- * @param quickPickWithAccept - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
+ * @param usedQuickPick - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
+ * @param currentStep - the current step of the input
+ * @param expectedButtons - the expected buttons of the input
  */
 async function showAndAssert(
   loadingQuickPick: LoadingQuickPick,
-  expectedItems: string[],
-  quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>
+  expectedItems: string[] | InputAction,
+  usedQuickPick: vscode.QuickPick<vscode.QuickPickItem>,
+  currentStep: number,
+  expectedButtons: vscode.QuickInputButton[]
 ) {
-  const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+  const result = await loadingQuickPick.showDialog(new DialogValues(), currentStep, 4);
 
-  assert.deepStrictEqual(expectedItems, result);
+  assert.deepStrictEqual(result, expectedItems);
 
-  assert.strictEqual(true, quickPickWithAccept.ignoreFocusOut, "ignoreFocusOut");
-  assert.deepStrictEqual(
-    [
-      {
-        iconPath: new vscode.ThemeIcon("sync"),
-        tooltip: "my reload tooltip",
-      },
-    ],
-    quickPickWithAccept.buttons,
-    "buttons"
-  );
+  assert.strictEqual(usedQuickPick.ignoreFocusOut, true, "ignoreFocusOut");
+  assert.deepStrictEqual(usedQuickPick.buttons, expectedButtons, "buttons");
 
-  assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
+  assert.strictEqual(usedQuickPick.items.map((pItem) => pItem.label).join(""), "normal item", "items");
 }
 
 /**
