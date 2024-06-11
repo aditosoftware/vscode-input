@@ -1,4 +1,4 @@
-import { DialogValues, InputBase, InputBaseOptions } from "..";
+import { DialogValues, InputAction, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 
 /**
@@ -16,6 +16,8 @@ export namespace InputBox {
   }
 }
 
+// TODO wenn auf ein Input zurückgegangen wird, Wert einfügen
+
 /**
  * Input for any free text.
  */
@@ -24,19 +26,81 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
     _currentResults: DialogValues,
     currentStep: number,
     maximumStep: number
-  ): Promise<string | undefined> {
-    const stepOutput = this.generateStepOutput(currentStep, maximumStep);
+  ): Promise<string | InputAction | undefined> {
+    return new Promise<string | InputAction | undefined>((resolve) => {
+      const inputBox = vscode.window.createInputBox();
 
-    // copy the options, so they will not persist during multiple dialogs
-    const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
-    if (options.title) {
-      // add the step indicator to the title
-      options.title += ` ${stepOutput}`;
-    } else {
-      // fallback, if no title was given
-      options.title = `Choose a value ${stepOutput}`;
-    }
+      // copy the options, so they will not persist during multiple dialogs
+      const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
+      const stepOutput = this.generateStepOutput(currentStep, maximumStep);
+      if (options.title) {
+        // add the step indicator to the title
+        options.title += ` ${stepOutput}`;
+      } else {
+        // fallback, if no title was given
+        options.title = `Choose a value ${stepOutput}`;
+      }
 
-    return vscode.window.showInputBox(options);
+      // set all the options to the input box
+      inputBox.title = options.title;
+      inputBox.value = options.value ?? "";
+      inputBox.valueSelection = options.valueSelection;
+      inputBox.prompt = options.prompt;
+      inputBox.placeholder = options.placeHolder;
+      inputBox.password = options.password ?? false;
+      inputBox.ignoreFocusOut = options.ignoreFocusOut ?? false;
+      inputBox.valueSelection = options.valueSelection;
+
+      // add a back button when it is not the first step
+      if (currentStep !== 1) {
+        inputBox.buttons = [vscode.QuickInputButtons.Back];
+      }
+
+      this.disposables.push(
+        // handle the back button
+        inputBox.onDidTriggerButton((button) => {
+          if (button === vscode.QuickInputButtons.Back) {
+            resolve(InputAction.BACK);
+          }
+        }),
+
+        // handle the validation message
+        inputBox.onDidChangeValue(async (text) => {
+          if (options.validateInput) {
+            const validationMessage = await options.validateInput(text);
+            if (validationMessage) {
+              inputBox.validationMessage = validationMessage;
+            } else {
+              inputBox.validationMessage = undefined;
+            }
+          }
+        }),
+
+        // handle the accept of the input
+        inputBox.onDidAccept(async () => {
+          const currentValue = inputBox.value;
+
+          if (options.validateInput) {
+            if (!(await options.validateInput(currentValue))) {
+              // if there is validation, check if it has no validation message
+              resolve(currentValue);
+            }
+          } else {
+            // otherwise, just return normally
+            resolve(currentValue);
+          }
+        }),
+
+        // handle the hiding of the input
+        inputBox.onDidHide(() => {
+          resolve(undefined);
+        })
+      );
+
+      // show the input box
+      inputBox.show();
+
+      this.disposables.push(inputBox);
+    });
   }
 }
