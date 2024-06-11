@@ -45,6 +45,9 @@ export async function handleMultiStepInput(
       // if needed, then show dialog
       const result = await input.showDialog(dialogValues, currentStep, totalNumber);
 
+      // dispose everything no longer needed from the input
+      input.dispose();
+
       if (!result) {
         // User canceled the selection
         logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
@@ -52,7 +55,7 @@ export async function handleMultiStepInput(
       }
 
       if (result === InputAction.BACK) {
-        // if the back button was pressed, set index and step counter to the last valid used elements 
+        // if the back button was pressed, set index and step counter to the last valid used elements
         i = lastStep.index - 1;
         currentStep = lastStep.stepNumber;
         continue;

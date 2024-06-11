@@ -4,6 +4,8 @@ import { GenericQuickPick } from "./AbstractQuickPick";
 import { GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
 import { logger } from "../../handleMultiStepInput";
 
+// TODO wenn auf ein QuickPick zurückgegangen wird, Wert auswählen (mehrfachselektion bloß?)
+
 /**
  * Namespace for any loading quick pick
  */
@@ -73,35 +75,39 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
     // Wait for user input or cancellation
     return new Promise<string[] | InputAction.BACK | undefined>((resolve) => {
       // and add a handler for the buttons
-      quickPick.onDidTriggerButton((button) => {
-        if (button === vscode.QuickInputButtons.Back) {
-          resolve(InputAction.BACK);
+      this.disposables.push(
+        quickPick.onDidTriggerButton((button) => {
+          if (button === vscode.QuickInputButtons.Back) {
+            resolve(InputAction.BACK);
+            quickPick.dispose();
+          } else if (button === reloadButton) {
+            logger.debug({ message: `Reload triggered for ${this.inputOptions.title}` });
+            this.prepareLoading(quickPick, currentStep, maximumStep);
+
+            // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
+            setTimeout(() => {
+              // load the items and then update title and items
+              this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults).then(
+                (result) => {
+                  this.handlePostLoading(quickPick, currentStep, maximumStep, result);
+                  logger.debug({ message: `Reload done for ${this.inputOptions.title}` });
+                }
+              );
+            }, 1);
+          }
+        }),
+
+        quickPick.onDidAccept(() => {
+          resolve(quickPick.selectedItems.map((pSelected) => pSelected.label));
           quickPick.dispose();
-        } else if (button === reloadButton) {
-          logger.debug({ message: `Reload triggered for ${this.inputOptions.title}` });
-          this.prepareLoading(quickPick, currentStep, maximumStep);
+        }),
 
-          // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
-          setTimeout(() => {
-            // load the items and then update title and items
-            this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults).then(
-              (result) => {
-                this.handlePostLoading(quickPick, currentStep, maximumStep, result);
-                logger.debug({ message: `Reload done for ${this.inputOptions.title}` });
-              }
-            );
-          }, 1);
-        }
-      });
-
-      quickPick.onDidAccept(() => {
-        resolve(quickPick.selectedItems.map((pSelected) => pSelected.label));
-        quickPick.dispose();
-      });
-      quickPick.onDidHide(() => {
-        resolve(undefined);
-        quickPick.dispose();
-      });
+        quickPick.onDidHide(() => {
+          resolve(undefined);
+          quickPick.dispose();
+        })
+      );
+      this.disposables.push(quickPick);
     });
   }
 

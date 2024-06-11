@@ -1,4 +1,5 @@
 import { DialogValues } from "..";
+import * as vscode from "vscode";
 
 /**
  * The options of any input element.
@@ -50,6 +51,11 @@ export abstract class InputBase<T extends InputBaseOptions> {
   inputOptions: T;
 
   /**
+   * The items that need to be disposed after the `showDialog` was called.
+   */
+  protected disposables: vscode.Disposable[] = [];
+
+  /**
    * Constructor.
    * @param options - the options of any input element.
    */
@@ -72,6 +78,13 @@ export abstract class InputBase<T extends InputBaseOptions> {
     currentStep: number,
     maximumStep: number
   ): Promise<string | string[] | boolean | undefined | InputAction.BACK>;
+
+  /**
+   * Disposes everything from the given input after the dialog was shown and the values was received.
+   */
+  dispose(): void {
+    this.disposables.forEach((pDisposable) => pDisposable.dispose());
+  }
 
   /**
    * Generate a step output that will read `(Step <current> of <maximum>)`.
