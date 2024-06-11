@@ -35,7 +35,7 @@ export async function handleMultiStepInput(
 
   let totalNumber: number = inputs.length;
 
-  let lastStep: { stepNumber: number; index: number } = { stepNumber: 1, index: 0 };
+  const steps: { stepNumber: number; index: number }[] = [];
 
   for (let i = 0; i < inputs.length; i++) {
     const input = inputs[i];
@@ -56,8 +56,9 @@ export async function handleMultiStepInput(
 
       if (result === InputAction.BACK) {
         // if the back button was pressed, set index and step counter to the last valid used elements
-        i = lastStep.index - 1;
-        currentStep = lastStep.stepNumber;
+        const goToStep = steps.pop() ?? { stepNumber: 1, index: 0 };
+        i = goToStep.index - 1;
+        currentStep = goToStep.stepNumber;
         continue;
       }
 
@@ -69,7 +70,7 @@ export async function handleMultiStepInput(
       }
 
       // save the last valid step for going back
-      lastStep = { stepNumber: currentStep, index: i };
+      steps.push({ stepNumber: currentStep, index: i });
 
       currentStep++;
     } else {

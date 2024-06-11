@@ -188,6 +188,71 @@ suite("handleMultiStepInput test", () => {
   });
 
   /**
+   * Tests that you can go back multiple times in a row:
+   *
+   * Workflow:
+   * 1. input in `beforeInputTrue`
+   * 2. input in `firstElement`
+   * 3. go back in `secondElement`
+   * 4. go back in `firstElement`
+   * 5. input in `beforeInputTrue`
+   * 6. input in `firstElement`
+   * 7. input in `secondElement`
+   */
+  test("should work go back multiple times in a row", async () => {
+    beforeInputTrue.showDialogStub.resolves("foo");
+
+    const firstValues = "myValue";
+    firstElement.showDialogStub
+      .onFirstCall()
+      .resolves("not needed first value")
+      .onSecondCall()
+      .resolves(InputAction.BACK)
+      .onThirdCall()
+      .resolves(firstValues);
+
+    const secondValues = ["a", "b", "c"];
+    secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
+
+    const result = await handleMultiStepInput([beforeInputTrue.input, firstElement.input, secondElement.input]);
+
+    assert.ok(typeof result !== "undefined", "result is there");
+    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
+    assert.deepStrictEqual(
+      new Map<string, string[]>([
+        [beforeInputTrue.name, ["foo"]],
+        [firstElement.name, [firstValues]],
+        [secondElement.name, secondValues],
+      ]),
+      result.inputValues
+    );
+
+    Sinon.assert.calledTwice(beforeInputTrue.showDialogStub);
+    Sinon.assert.calledWith(beforeInputTrue.showDialogStub, Sinon.match.any, 1, 3);
+    Sinon.assert.calledThrice(firstElement.showDialogStub);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 2, 3);
+    Sinon.assert.calledTwice(secondElement.showDialogStub);
+    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 3, 3);
+  });
+
+  /**
+   * Tests that a go back on the first element is working.
+   */
+  test("should work go back on first element", async () => {
+    const firstValues = "myValue";
+    firstElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(firstValues);
+
+    const result = await handleMultiStepInput([firstElement.input]);
+
+    assert.ok(typeof result !== "undefined", "result is there");
+    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
+    assert.deepStrictEqual(new Map<string, string[]>([[firstElement.name, [firstValues]]]), result.inputValues);
+
+    Sinon.assert.calledTwice(firstElement.showDialogStub);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 1);
+  });
+
+  /**
    * Tests the handling of `beforeInput`.
    */
   suite("handle beforeInput", () => {
