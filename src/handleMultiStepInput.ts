@@ -33,9 +33,11 @@ export async function handleMultiStepInput(
     dialogValues = new DialogValues();
   }
 
+  let goingBackProcess = false;
+
   let totalNumber: number = inputs.length;
 
-  const steps: { stepNumber: number; index: number }[] = [];
+  const steps: { stepNumber: number; index: number; totalNumber: number }[] = [];
 
   for (let i = 0; i < inputs.length; i++) {
     const input = inputs[i];
@@ -56,23 +58,25 @@ export async function handleMultiStepInput(
 
       if (result === InputAction.BACK) {
         // if the back button was pressed, set index and step counter to the last valid used elements
-        const goToStep = steps.pop() ?? { stepNumber: 1, index: 0 };
-        i = goToStep.index - 1;
-        currentStep = goToStep.stepNumber;
+        i = handleGoingBack();
+        goingBackProcess = true;
         continue;
       }
+
+      goingBackProcess = false;
 
       dialogValues.addValue(input.inputOptions.name, result);
 
       // if there is some special behavior after the input, handle it
-      if (input.inputOptions.onAfterInput) {
-        input.inputOptions.onAfterInput(dialogValues);
-      }
+      input.inputOptions.onAfterInput?.(dialogValues);
 
       // save the last valid step for going back
-      steps.push({ stepNumber: currentStep, index: i });
+      steps.push({ stepNumber: currentStep, index: i, totalNumber });
 
       currentStep++;
+    } else if (goingBackProcess) {
+      // if we are going back and skipping, then just go back one more step
+      i = handleGoingBack();
     } else {
       // input not needed, count down total number
       totalNumber--;
@@ -80,4 +84,18 @@ export async function handleMultiStepInput(
   }
 
   return dialogValues;
+
+  /**
+   * Handles the going back in the multi-step-input.
+   *
+   * This will remove the last step from the taken steps and sets current step count and total number to the correct value.
+   *
+   * @returns the new index for the loop
+   */
+  function handleGoingBack() {
+    const goToStep = steps.pop() ?? { stepNumber: 1, index: 0, totalNumber: inputs.length };
+    currentStep = goToStep.stepNumber;
+    totalNumber = goToStep.totalNumber;
+    return goToStep.index - 1;
+  }
 }

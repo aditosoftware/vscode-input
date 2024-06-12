@@ -236,6 +236,68 @@ suite("handleMultiStepInput test", () => {
   });
 
   /**
+   * Tests that the going back is working correctly when skipping an element on the going back route.
+   *
+   * Workflow:
+   * 2. input in `firstElement`
+   * 2. input in `beforeInputFirstTrue` (component shown)
+   * 3. go back in `secondElement`
+   * 4. skipping over `beforeInputFirstTrue`
+   * 5. input in `firstElement`
+   * 6. input in `secondElement`
+   */
+  test("should go back when skipping one component on the second time encountered", async function () {
+    this.timeout(80_00000);
+
+    let shouldShow = true;
+
+    const beforeInputFirstTrue = new TestElement(
+      new InputBox({
+        name: "beforeInputFirstTrue",
+        inputBoxOptions: {},
+        onBeforeInput: () => {
+          if (shouldShow) {
+            shouldShow = false;
+            return true;
+          }
+          return false;
+        },
+      })
+    );
+    beforeInputFirstTrue.showDialogStub.resolves("foo");
+
+    const firstValues = "myValue";
+    firstElement.showDialogStub.onFirstCall().resolves("not needed first value").onSecondCall().resolves(firstValues);
+
+    const secondValues = ["a", "b", "c"];
+    secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
+
+    const result = await handleMultiStepInput([firstElement.input, beforeInputFirstTrue.input, secondElement.input]);
+
+    assert.ok(typeof result !== "undefined", "result is there");
+    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
+    assert.deepStrictEqual(
+      new Map<string, string[]>([
+        [beforeInputFirstTrue.name, ["foo"]],
+        [firstElement.name, [firstValues]],
+        [secondElement.name, secondValues],
+      ]),
+      result.inputValues
+    );
+
+    Sinon.assert.calledTwice(firstElement.showDialogStub);
+    Sinon.assert.calledWith(firstElement.showDialogStub.firstCall, Sinon.match.any, 1, 3);
+    Sinon.assert.calledWith(firstElement.showDialogStub.secondCall, Sinon.match.any, 1, 3);
+
+    Sinon.assert.calledOnce(beforeInputFirstTrue.showDialogStub);
+    Sinon.assert.calledWith(beforeInputFirstTrue.showDialogStub, Sinon.match.any, 2, 3);
+
+    Sinon.assert.calledTwice(secondElement.showDialogStub);
+    Sinon.assert.calledWith(secondElement.showDialogStub.firstCall, Sinon.match.any, 3, 3);
+    Sinon.assert.calledWith(secondElement.showDialogStub.secondCall, Sinon.match.any, 2, 2);
+  });
+
+  /**
    * Tests that a go back on the first element is working.
    */
   test("should work go back on first element", async () => {
