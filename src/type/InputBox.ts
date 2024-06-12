@@ -16,14 +16,12 @@ export namespace InputBox {
   }
 }
 
-// TODO wenn auf ein Input zurückgegangen wird, Wert einfügen
-
 /**
  * Input for any free text.
  */
 export class InputBox extends InputBase<InputBox.InputBoxOptions> {
   async showDialog(
-    _currentResults: DialogValues,
+    currentResults: DialogValues,
     currentStep: number,
     maximumStep: number
   ): Promise<string | InputAction | undefined> {
@@ -41,9 +39,14 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
         options.title = `Choose a value ${stepOutput}`;
       }
 
+      // find out the value to set:
+      // if there is an value from the inputValues with the name, use it.
+      // otherwise look in the options, if there is one given
+      const value = currentResults.inputValues.get(this.inputOptions.name)?.[0] ?? options.value ?? "";
+
       // set all the options to the input box
       inputBox.title = options.title;
-      inputBox.value = options.value ?? "";
+      inputBox.value = value;
       inputBox.valueSelection = options.valueSelection;
       inputBox.prompt = options.prompt;
       inputBox.placeholder = options.placeHolder;

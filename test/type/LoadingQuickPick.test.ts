@@ -75,6 +75,50 @@ suite("LoadingQuickPick tests", () => {
   });
 
   /**
+   * Tests that a given value for the name will be inputted into the value of the element.
+   */
+  test("should take old value", async () => {
+    const name = "loadingQuickPick";
+    const value = "item2";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, [value]);
+
+    createQuickPick.returns(quickPickWithHide);
+
+    const loadingQuickPick = new LoadingQuickPick({
+      name,
+      title: "My title",
+      loadingTitle: "My loading title",
+      generateItems: () => [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2" },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ],
+      reloadItems: () => [{ label: "reload item" }],
+      reloadTooltip: "my reload tooltip",
+      allowMultiple: true,
+    });
+
+    await loadingQuickPick.showDialog(dialogValues, 2, 4);
+
+    assert.deepStrictEqual(
+      quickPickWithHide.selectedItems,
+      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
+      "selected items"
+    );
+    assert.deepStrictEqual(
+      quickPickWithHide.items,
+      [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2", picked: true },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ] as vscode.QuickPickItem[],
+      "items"
+    );
+  });
+
+  /**
    * Tests that the `onDidHide` will be handled correctly.
    */
   test("should handle hide correctly", async () => {

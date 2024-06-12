@@ -3,8 +3,6 @@ import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
 import { GenericQuickPickOptions } from "./GenericQuickPick";
 
-// TODO wenn auf ein QuickPick zurückgegangen wird, Wert auswählen (mehrfachselektion bloß?)
-
 /**
  * Any quick pick that does not require any sort of loading.
  */
@@ -17,11 +15,13 @@ export class QuickPick extends GenericQuickPick<GenericQuickPickOptions> {
     const items = await this.loadItems(this.inputOptions.generateItems, currentResults);
 
     const quickPick = vscode.window.createQuickPick();
-    console.log(quickPick.selectedItems);
     quickPick.title = this.generateTitle(this.inputOptions.title, currentStep, maximumStep, items.additionalTitle);
     quickPick.placeholder = this.generatePlaceholder();
     quickPick.canSelectMany = this.inputOptions.allowMultiple ?? false;
     quickPick.items = items.items;
+
+    // update the selected items if there were old values given and many values were selected
+    this.addPreviousSelection(quickPick, currentResults);
 
     // only show back button when not first step
     if (currentStep !== 1) {

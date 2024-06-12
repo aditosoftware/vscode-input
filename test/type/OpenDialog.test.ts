@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import Sinon from "sinon";
 import { DialogValues, OpenDialog } from "../../src";
 import assert from "assert";
+import path from "path";
 
 suite("OpenDialog tests", () => {
   let showOpenDialogStub: Sinon.SinonStub;
@@ -18,6 +19,91 @@ suite("OpenDialog tests", () => {
    */
   teardown("restore", () => {
     showOpenDialogStub.restore();
+  });
+
+  /**
+   * Tests that a given value for the name will be inputted into the value of the element when a file selection is there.
+   */
+  test("should take old value for file selection", async () => {
+    const name = "openDialog";
+    const value = vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection").toLowerCase());
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, value.fsPath);
+
+    showOpenDialogStub.resolves(undefined);
+
+    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: true } });
+
+    await openDialog.showDialog(dialogValues, 2, 4);
+
+    // check that the fsPath is identical in both urls
+    const args = showOpenDialogStub.args[0][0];
+    assert.deepStrictEqual(args.defaultUri.fsPath, value.fsPath);
+
+    Sinon.assert.calledWithExactly(showOpenDialogStub, {
+      canSelectFiles: true,
+      title: "Select a File (Step 2 of 4)",
+      defaultUri: value,
+    });
+  });
+
+  /**
+   * Tests that a given value for the name will be inputted into the value of the element when a folder selection is there.
+   */
+  test("should take old value for folder selection", async () => {
+    const name = "openDialog";
+    const value = vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection").toLowerCase());
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, value.fsPath);
+
+    showOpenDialogStub.resolves(undefined);
+
+    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: false, canSelectFolders: true } });
+
+    await openDialog.showDialog(dialogValues, 2, 4);
+
+    // check that the fsPath is identical in both urls
+    const args = showOpenDialogStub.args[0][0];
+    assert.deepStrictEqual(args.defaultUri.fsPath, value.fsPath);
+
+    Sinon.assert.calledWithExactly(showOpenDialogStub, {
+      title: "Select a Directory (Step 2 of 4)",
+      defaultUri: value,
+      canSelectFiles: false,
+      canSelectFolders: true,
+    });
+  });
+
+  /**
+   * Tests that a given value for the name will be inputted into the value of the element when multiple elements are selected.
+   */
+  test("should take old value for multiple selection", async () => {
+    const name = "openDialog";
+    const value = vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection").toLowerCase());
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, [
+      vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection", "someSubelement").toLowerCase()).fsPath,
+      vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection", "anotherSubelement").toLowerCase())
+        .fsPath,
+      vscode.Uri.file(path.join(process.cwd(), "my", "uri", "for", "selection", "thirdSubelement").toLowerCase())
+        .fsPath,
+    ]);
+
+    showOpenDialogStub.resolves(undefined);
+
+    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: true, canSelectMany: true } });
+
+    await openDialog.showDialog(dialogValues, 2, 4);
+
+    Sinon.assert.calledWithExactly(showOpenDialogStub, {
+      title: "Select a File (Step 2 of 4)",
+      defaultUri: value,
+      canSelectFiles: true,
+      canSelectMany: true,
+    });
   });
 
   /**

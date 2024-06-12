@@ -60,6 +60,52 @@ suite("QuickPick tests", () => {
   });
 
   /**
+   * Tests that a given value for the name will be inputted into the value of the element.
+   */
+  test("should take old value", async () => {
+    const value = "item2";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue("quickPick", [value]);
+
+    const quickPick = new QuickPick({ ...basicOptions, allowMultiple: true, generateItems: () => quickPickItems });
+
+    await showDialogAndAssert([value], quickPick, 2, dialogValues);
+
+    assert.deepStrictEqual(
+      quickPickWithAccept.selectedItems,
+      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
+      "selected items"
+    );
+    assert.deepStrictEqual(
+      quickPickWithAccept.items,
+      [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2", picked: true },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ] as vscode.QuickPickItem[],
+      "items"
+    );
+  });
+
+  /**
+   * Tests that a given value for the name will be not inputted into the value of the element, when `allowMultiple` is set to false.
+   */
+  test("should not take old value when only allow multiple is not set", async () => {
+    const name = "Unit";
+    const value = "item2";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, [value]);
+
+    const quickPick = new QuickPick({ ...basicOptions, allowMultiple: false, generateItems: () => quickPickItems });
+
+    await showDialogAndAssert([], quickPick, 2, dialogValues);
+
+    assert.deepStrictEqual(quickPickWithAccept.selectedItems, []);
+  });
+
+  /**
    * Checks if a correct title was created when `allowMultiple` was not set.
    */
   test("should create correct title (no allowMultiple)", async () => {
@@ -212,13 +258,15 @@ suite("QuickPick tests", () => {
  * @param expected - the expected result of the dialog
  * @param quickPick - the quick pick that should be used for showing the dialog
  * @param currentStep - the current step of the dialog
+ * @param dialogValues - the current values of the dialog
  */
 async function showDialogAndAssert(
   expected: string[] | InputAction.BACK | undefined,
   quickPick: QuickPick,
-  currentStep: number = 2
+  currentStep: number = 2,
+  dialogValues: DialogValues = new DialogValues()
 ) {
-  const result = await quickPick.showDialog(new DialogValues(), currentStep, 4);
+  const result = await quickPick.showDialog(dialogValues, currentStep, 4);
 
   assert.deepStrictEqual(expected, result);
 }

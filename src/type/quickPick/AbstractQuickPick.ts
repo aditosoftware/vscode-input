@@ -56,4 +56,37 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
   protected generatePlaceholder(): string {
     return `Select ${this.inputOptions.allowMultiple ? "any number of items" : "one item"}`;
   }
+
+  /**
+   * Picks the previous selected values from the current dialog values in the quick pick.
+   *
+   * This will only happen if the quick pick can select many items.
+   *
+   * @param quickPick - the quick pick that was generated
+   * @param currentResults - the current dialog values
+   */
+  protected addPreviousSelection(
+    quickPick: vscode.QuickPick<vscode.QuickPickItem>,
+    currentResults: DialogValues
+  ): void {
+    if (quickPick.canSelectMany) {
+      const oldValues = currentResults.inputValues.get(this.inputOptions.name);
+
+      if (oldValues) {
+        const selectedItems: vscode.QuickPickItem[] = [];
+
+        quickPick.items.forEach((pItem) => {
+          const label = pItem.label;
+          if (oldValues.includes(label)) {
+            // if the current item was in the oldValues, then pick it and save it to the selected items
+            pItem.picked = true;
+
+            selectedItems.push(pItem);
+          }
+        });
+
+        quickPick.selectedItems = selectedItems;
+      }
+    }
+  }
 }

@@ -70,7 +70,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
 
     // loads all the items and shows them
     const data = await this.loadItems(this.inputOptions.generateItems, currentResults);
-    this.handlePostLoading(quickPick, currentStep, maximumStep, data);
+    this.handlePostLoading(quickPick, currentStep, maximumStep, data, currentResults);
 
     // Wait for user input or cancellation
     return new Promise<string[] | InputAction.BACK | undefined>((resolve) => {
@@ -78,8 +78,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
       this.disposables.push(
         quickPick.onDidTriggerButton((button) => {
           if (button === vscode.QuickInputButtons.Back) {
-            resolve(InputAction.BACK);
-            quickPick.dispose();
+            resolve(InputAction.BACK); 
           } else if (button === reloadButton) {
             logger.debug({ message: `Reload triggered for ${this.inputOptions.title}` });
             this.prepareLoading(quickPick, currentStep, maximumStep);
@@ -89,7 +88,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
               // load the items and then update title and items
               this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults).then(
                 (result) => {
-                  this.handlePostLoading(quickPick, currentStep, maximumStep, result);
+                  this.handlePostLoading(quickPick, currentStep, maximumStep, result, currentResults);
                   logger.debug({ message: `Reload done for ${this.inputOptions.title}` });
                 }
               );
@@ -99,12 +98,10 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
 
         quickPick.onDidAccept(() => {
           resolve(quickPick.selectedItems.map((pSelected) => pSelected.label));
-          quickPick.dispose();
         }),
 
         quickPick.onDidHide(() => {
           resolve(undefined);
-          quickPick.dispose();
         })
       );
       this.disposables.push(quickPick);
@@ -134,17 +131,22 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
    * @param currentStep - the current dialog step
    * @param maximumStep - the maximum dialog step
    * @param data - the loaded data
+   * @param currentResults - the current selected dialog values
    */
   private handlePostLoading(
     quickPick: vscode.QuickPick<vscode.QuickPickItem>,
     currentStep: number,
     maximumStep: number,
-    data: QuickPickItems
+    data: QuickPickItems,
+    currentResults: DialogValues
   ): void {
     quickPick.title = this.generateTitle(this.inputOptions.title, currentStep, maximumStep, data.additionalTitle);
     quickPick.placeholder = this.generatePlaceholder();
     quickPick.busy = false;
     quickPick.enabled = true;
     quickPick.items = data.items;
+
+    // update the selected items if there were old values given and many values were selected
+    this.addPreviousSelection(quickPick, currentResults);
   }
 }

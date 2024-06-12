@@ -49,6 +49,40 @@ suite("InputBox Tests", () => {
   });
 
   /**
+   * Tests that a given value for the name will be inputted into the value of the element.
+   */
+  test("should take old value", async () => {
+    const name = "Unit";
+    const value = "my value";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, value);
+
+    const inputBox = new InputBox({ name: name });
+
+    await inputBox.showDialog(dialogValues, 2, 4);
+
+    assert.strictEqual(inputBoxWithAccept.value, value);
+  });
+
+  /**
+   * Tests that a given value for the name will be inputted into the value of the element, also when a old value is present.
+   */
+  test("should take old value over old value", async () => {
+    const name = "Unit";
+    const value = "my value";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, value);
+
+    const inputBox = new InputBox({ name: name, inputBoxOptions: { value: "not used old value" } });
+
+    await inputBox.showDialog(dialogValues, 2, 4);
+
+    assert.strictEqual(inputBoxWithAccept.value, value);
+  });
+
+  /**
    * Tests that `showDialog` works correctly, when no `inputBoxOptions` (and therefore no title) is provided.
    */
   test("showDialog should work correctly, if no inputBoxOptions are provided", async () => {
@@ -186,12 +220,12 @@ suite("InputBox Tests", () => {
       });
 
       // If the validation will fail, we would have a timeout, because we never get a result from the box.
-      // Because of this, we are having here a timeout of 1000 ms.
+      // Because of this, we are having here a timeout of 25 ms.
       // This will resolve with our `timeoutText` after the time, in order to not having the method going into a timeout.
       const result = await new Promise<string | undefined>((resolve, reject) => {
         const timer = setTimeout(() => {
           resolve(timeoutText);
-        }, 1000);
+        }, 25);
 
         inputBox
           .showDialog(new DialogValues(), 2, 4)
