@@ -4,8 +4,6 @@ import * as vscode from "vscode";
 import assert from "assert";
 import { QuickPickItems } from "../../src/type/quickPick/GenericQuickPick";
 
-// FIXME items prüfen!
-
 /**
  * Tests for QuickPicks.
  */
@@ -106,6 +104,38 @@ suite("QuickPick tests", () => {
   });
 
   /**
+   * Tests that the picked selection from the generated items will be still there.
+   */
+  test("should preserve picked items the generated items", async () => {
+    const quickPick = new QuickPick({
+      ...basicOptions,
+      allowMultiple: true,
+      generateItems: () => [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2", picked: true },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ],
+    });
+
+    await showDialogAndAssert(["item2"], quickPick);
+
+    assert.deepStrictEqual(
+      quickPickWithAccept.selectedItems,
+      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
+      "selected items"
+    );
+    assert.deepStrictEqual(
+      quickPickWithAccept.items,
+      [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2", picked: true },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ] as vscode.QuickPickItem[],
+      "items"
+    );
+  });
+
+  /**
    * Checks if a correct title was created when `allowMultiple` was not set.
    */
   test("should create correct title (no allowMultiple)", async () => {
@@ -124,7 +154,10 @@ suite("QuickPick tests", () => {
   test("should create correct title (allowMultiple to true)", async () => {
     const quickPick = new QuickPick({
       ...basicOptions,
-      generateItems: () => quickPickItems,
+      generateItems: () =>
+        quickPickItems.map((pItem) => {
+          return { ...pItem, picked: false };
+        }),
       allowMultiple: true,
     });
 
@@ -157,16 +190,17 @@ suite("QuickPick tests", () => {
    * Tests that a single item was correctly selected
    */
   test("should correctly handle single selection", async () => {
-    const quickPick = new QuickPick({
-      ...basicOptions,
-      generateItems: () => quickPickItems,
-      allowMultiple: true,
-    });
-
     const expectedLabel = "selected item";
 
-    Sinon.stub(quickPickWithAccept, "selectedItems").get(() => {
-      return [{ label: expectedLabel, description: "My description", detail: "My detail" }];
+    const quickPick = new QuickPick({
+      ...basicOptions,
+      generateItems: () => [
+        { label: expectedLabel, description: "My description", detail: "My detail", picked: true },
+        ...quickPickItems.map((pItem) => {
+          return { ...pItem, picked: false };
+        }),
+      ],
+      allowMultiple: true,
     });
 
     await showDialogAndAssert([expectedLabel], quickPick);
@@ -182,12 +216,12 @@ suite("QuickPick tests", () => {
   test("should correctly handle multiple selection", async () => {
     const quickPick = new QuickPick({
       ...basicOptions,
-      generateItems: () => [],
+      generateItems: () => [
+        ...quickPickItems.map((pItem) => {
+          return { ...pItem, picked: true };
+        }),
+      ],
       allowMultiple: true,
-    });
-
-    Sinon.stub(quickPickWithAccept, "selectedItems").get(() => {
-      return quickPickItems;
     });
 
     await showDialogAndAssert(["item1", "item2", "item3"], quickPick);

@@ -58,35 +58,37 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
   }
 
   /**
-   * Picks the previous selected values from the current dialog values in the quick pick.
+   * Sets the selected items.
+   *
+   * These can be from the current dialog values in the quick pick or
+   * from the items of the quick pick that were pre-picked by the program.
    *
    * This will only happen if the quick pick can select many items.
    *
    * @param quickPick - the quick pick that was generated
    * @param currentResults - the current dialog values
    */
-  protected addPreviousSelection(
-    quickPick: vscode.QuickPick<vscode.QuickPickItem>,
-    currentResults: DialogValues
-  ): void {
+  protected setSelectedItems(quickPick: vscode.QuickPick<vscode.QuickPickItem>, currentResults: DialogValues): void {
     if (quickPick.canSelectMany) {
       const oldValues = currentResults.inputValues.get(this.inputOptions.name);
 
-      if (oldValues) {
-        const selectedItems: vscode.QuickPickItem[] = [];
+      const selectedItems: vscode.QuickPickItem[] = [];
 
-        quickPick.items.forEach((pItem) => {
-          const label = pItem.label;
+      quickPick.items.forEach((pItem) => {
+        const label = pItem.label;
+        if (oldValues) {
           if (oldValues.includes(label)) {
-            // if the current item was in the oldValues, then pick it and save it to the selected items
+            // if the current item was in the oldValues, then pick it
             pItem.picked = true;
-
             selectedItems.push(pItem);
           }
-        });
+        } else if (pItem.picked) {
+          // if there are no old values, then set the selected  items to the picked items
+          selectedItems.push(pItem);
+        }
+      });
 
-        quickPick.selectedItems = selectedItems;
-      }
+      quickPick.selectedItems = selectedItems;
     }
   }
 }

@@ -21,7 +21,7 @@ export class QuickPick extends GenericQuickPick<GenericQuickPickOptions> {
     quickPick.items = items.items;
 
     // update the selected items if there were old values given and many values were selected
-    this.addPreviousSelection(quickPick, currentResults);
+    this.setSelectedItems(quickPick, currentResults);
 
     // only show back button when not first step
     if (currentStep !== 1) {

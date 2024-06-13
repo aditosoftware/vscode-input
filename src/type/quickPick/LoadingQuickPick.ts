@@ -4,8 +4,6 @@ import { GenericQuickPick } from "./AbstractQuickPick";
 import { GenericQuickPickOptions, QuickPickItemFunction, QuickPickItems } from "./GenericQuickPick";
 import { logger } from "../../handleMultiStepInput";
 
-// TODO wenn auf ein QuickPick zurückgegangen wird, Wert auswählen (mehrfachselektion bloß?)
-
 /**
  * Namespace for any loading quick pick
  */
@@ -78,7 +76,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
       this.disposables.push(
         quickPick.onDidTriggerButton((button) => {
           if (button === vscode.QuickInputButtons.Back) {
-            resolve(InputAction.BACK); 
+            resolve(InputAction.BACK);
           } else if (button === reloadButton) {
             logger.debug({ message: `Reload triggered for ${this.inputOptions.title}` });
             this.prepareLoading(quickPick, currentStep, maximumStep);
@@ -147,6 +145,6 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
     quickPick.items = data.items;
 
     // update the selected items if there were old values given and many values were selected
-    this.addPreviousSelection(quickPick, currentResults);
+    this.setSelectedItems(quickPick, currentResults);
   }
 }
