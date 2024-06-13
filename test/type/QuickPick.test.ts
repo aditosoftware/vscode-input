@@ -70,20 +70,7 @@ suite("QuickPick tests", () => {
 
     await showDialogAndAssert([value], quickPick, 2, dialogValues);
 
-    assert.deepStrictEqual(
-      quickPickWithAccept.selectedItems,
-      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
-      "selected items"
-    );
-    assert.deepStrictEqual(
-      quickPickWithAccept.items,
-      [
-        { label: "item1", description: "description1", detail: "detail1" },
-        { label: "item2", description: "description2", detail: "detail2", picked: true },
-        { label: "item3", description: "description3", detail: "detail3" },
-      ] as vscode.QuickPickItem[],
-      "items"
-    );
+    assertItem2WasSelected(quickPickWithAccept);
   });
 
   /**
@@ -119,20 +106,7 @@ suite("QuickPick tests", () => {
 
     await showDialogAndAssert(["item2"], quickPick);
 
-    assert.deepStrictEqual(
-      quickPickWithAccept.selectedItems,
-      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
-      "selected items"
-    );
-    assert.deepStrictEqual(
-      quickPickWithAccept.items,
-      [
-        { label: "item1", description: "description1", detail: "detail1" },
-        { label: "item2", description: "description2", detail: "detail2", picked: true },
-        { label: "item3", description: "description3", detail: "detail3" },
-      ] as vscode.QuickPickItem[],
-      "items"
-    );
+    assertItem2WasSelected(quickPickWithAccept);
   });
 
   /**
@@ -308,6 +282,27 @@ suite("QuickPick tests", () => {
     assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
   });
 });
+
+/**
+ * Asserts that `item2` is the selected item and that the items contains `item1`, `item2` (picked), and `item3`.
+ * @param quickPickWithAccept - the quickPick that should be checked
+ */
+function assertItem2WasSelected(quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>) {
+  assert.deepStrictEqual(
+    quickPickWithAccept.selectedItems,
+    [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
+    "selected items"
+  );
+  assert.deepStrictEqual(
+    quickPickWithAccept.items,
+    [
+      { label: "item1", description: "description1", detail: "detail1" },
+      { label: "item2", description: "description2", detail: "detail2", picked: true },
+      { label: "item3", description: "description3", detail: "detail3" },
+    ] as vscode.QuickPickItem[],
+    "items"
+  );
+}
 
 /**
  * Shows the dialog and asserts the result of the dialog.

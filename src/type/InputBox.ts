@@ -25,40 +25,40 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
     currentStep: number,
     maximumStep: number
   ): Promise<string | InputAction | undefined> {
+    const inputBox = vscode.window.createInputBox();
+
+    // copy the options, so they will not persist during multiple dialogs
+    const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
+    const stepOutput = this.generateStepOutput(currentStep, maximumStep);
+    if (options.title) {
+      // add the step indicator to the title
+      options.title += ` ${stepOutput}`;
+    } else {
+      // fallback, if no title was given
+      options.title = `Choose a value ${stepOutput}`;
+    }
+
+    // find out the value to set:
+    // if there is an value from the inputValues with the name, use it.
+    // otherwise look in the options, if there is one given
+    const value = currentResults.inputValues.get(this.inputOptions.name)?.[0] ?? options.value ?? "";
+
+    // set all the options to the input box
+    inputBox.title = options.title;
+    inputBox.value = value;
+    inputBox.valueSelection = options.valueSelection;
+    inputBox.prompt = options.prompt;
+    inputBox.placeholder = options.placeHolder;
+    inputBox.password = options.password ?? false;
+    inputBox.ignoreFocusOut = options.ignoreFocusOut ?? false;
+    inputBox.valueSelection = options.valueSelection;
+
+    // add a back button when it is not the first step
+    if (currentStep !== 1) {
+      inputBox.buttons = [vscode.QuickInputButtons.Back];
+    }
+
     return new Promise<string | InputAction | undefined>((resolve) => {
-      const inputBox = vscode.window.createInputBox();
-
-      // copy the options, so they will not persist during multiple dialogs
-      const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
-      const stepOutput = this.generateStepOutput(currentStep, maximumStep);
-      if (options.title) {
-        // add the step indicator to the title
-        options.title += ` ${stepOutput}`;
-      } else {
-        // fallback, if no title was given
-        options.title = `Choose a value ${stepOutput}`;
-      }
-
-      // find out the value to set:
-      // if there is an value from the inputValues with the name, use it.
-      // otherwise look in the options, if there is one given
-      const value = currentResults.inputValues.get(this.inputOptions.name)?.[0] ?? options.value ?? "";
-
-      // set all the options to the input box
-      inputBox.title = options.title;
-      inputBox.value = value;
-      inputBox.valueSelection = options.valueSelection;
-      inputBox.prompt = options.prompt;
-      inputBox.placeholder = options.placeHolder;
-      inputBox.password = options.password ?? false;
-      inputBox.ignoreFocusOut = options.ignoreFocusOut ?? false;
-      inputBox.valueSelection = options.valueSelection;
-
-      // add a back button when it is not the first step
-      if (currentStep !== 1) {
-        inputBox.buttons = [vscode.QuickInputButtons.Back];
-      }
-
       this.disposables.push(
         // handle the back button
         inputBox.onDidTriggerButton((button) => {
