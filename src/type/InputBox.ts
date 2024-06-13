@@ -58,24 +58,26 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
       inputBox.buttons = [vscode.QuickInputButtons.Back];
     }
 
+    this.disposables.push(
+      // handle the validation message
+      inputBox.onDidChangeValue(async (text) => {
+        if (options.validateInput) {
+          const validationMessage = await options.validateInput(text);
+          if (validationMessage) {
+            inputBox.validationMessage = validationMessage;
+          } else {
+            inputBox.validationMessage = undefined;
+          }
+        }
+      })
+    );
+
     return new Promise<string | InputAction | undefined>((resolve) => {
       this.disposables.push(
         // handle the back button
         inputBox.onDidTriggerButton((button) => {
           if (button === vscode.QuickInputButtons.Back) {
             resolve(InputAction.BACK);
-          }
-        }),
-
-        // handle the validation message
-        inputBox.onDidChangeValue(async (text) => {
-          if (options.validateInput) {
-            const validationMessage = await options.validateInput(text);
-            if (validationMessage) {
-              inputBox.validationMessage = validationMessage;
-            } else {
-              inputBox.validationMessage = undefined;
-            }
           }
         }),
 
