@@ -58,20 +58,6 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
       inputBox.buttons = [vscode.QuickInputButtons.Back];
     }
 
-    this.disposables.push(
-      // handle the validation message
-      inputBox.onDidChangeValue(async (text) => {
-        if (options.validateInput) {
-          const validationMessage = await options.validateInput(text);
-          if (validationMessage) {
-            inputBox.validationMessage = validationMessage;
-          } else {
-            inputBox.validationMessage = undefined;
-          }
-        }
-      })
-    );
-
     return new Promise<string | InputAction | undefined>((resolve) => {
       this.disposables.push(
         // handle the back button
@@ -81,17 +67,17 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
           }
         }),
 
+        // handle the validation message
+        inputBox.onDidChangeValue(async (text) => {
+          await this.validateInput(options, text, inputBox);
+        }),
+
         // handle the accept of the input
         inputBox.onDidAccept(async () => {
           const currentValue = inputBox.value;
 
-          if (options.validateInput) {
-            if (!(await options.validateInput(currentValue))) {
-              // if there is validation, check if it has no validation message
-              resolve(currentValue);
-            }
-          } else {
-            // otherwise, just return normally
+          if (!options.validateInput || !(await options.validateInput(currentValue))) {
+            // only resolve the value, if there is no validation or the validation does return nothing
             resolve(currentValue);
           }
         }),
@@ -107,5 +93,23 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
 
       this.disposables.push(inputBox);
     });
+  }
+
+  /**
+   * Validates the input and sets the validation message.
+   *
+   * @param options - the options of the input box
+   * @param text - the currently given text
+   * @param inputBox - the input box
+   */
+  private async validateInput(options: vscode.InputBoxOptions, text: string, inputBox: vscode.InputBox) {
+    if (options.validateInput) {
+      const validationMessage = await options.validateInput(text);
+      if (validationMessage) {
+        inputBox.validationMessage = validationMessage;
+      } else {
+        inputBox.validationMessage = undefined;
+      }
+    }
   }
 }
