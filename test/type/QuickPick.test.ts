@@ -285,6 +285,28 @@ suite("QuickPick tests", () => {
 
     await showDialogAndAssert(undefined, quickPick);
   });
+
+  /**
+   * Tests that a given placeholder will be used correctly.
+   */
+  test("should use placeholder correctly", async () => {
+    const placeholder = "Lorem ipsum";
+
+    const quickPick = new QuickPick({
+      ...basicOptions,
+      placeholder: placeholder,
+      generateItems: () => [
+        ...quickPickItems.map((pItem) => {
+          return { ...pItem, picked: true };
+        }),
+      ],
+      allowMultiple: true,
+    });
+
+    await showDialogAndAssert(["item1", "item2", "item3"], quickPick);
+
+    assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
+  });
 });
 
 /**
