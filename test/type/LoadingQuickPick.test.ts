@@ -271,6 +271,7 @@ suite("LoadingQuickPick tests", () => {
 
 /**
  * Shows the dialog of the quick pick and asserts that are some common values are set.
+ *
  * @param loadingQuickPick - the loading quick pick that should be used for showing the dialog
  * @param expectedItems - the expected items that should be returned by the `showDialog` function
  * @param quickPickWithAccept - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
@@ -279,7 +280,7 @@ async function showAndAssert(
   loadingQuickPick: LoadingQuickPick,
   expectedItems: string[],
   quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>
-) {
+): Promise<void> {
   const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 
   assert.deepStrictEqual(expectedItems, result);
@@ -301,6 +302,7 @@ async function showAndAssert(
 
 /**
  * Asserts the calls (count and arguments) of various set elements of the quick pick.
+ *
  * @param duplicate - if all the set call are done duplicate (e.g. after a reload)
  * @param titleSet - the spy of the title set
  * @param placeholderSet - the spy of the placeholder set
@@ -321,7 +323,7 @@ function validateResults(
   busySet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
   enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
   placeholderMessage: string
-) {
+): void {
   // general call count of every element
   const callCount = duplicate ? 4 : 2;
 

@@ -301,6 +301,7 @@ class TestElement {
 
   /**
    * Creates and extracts all relevant elements for a test element.
+   *
    * @param input - the input
    */
   constructor(input: InputBase<InputBaseOptions>) {
@@ -312,7 +313,7 @@ class TestElement {
   /**
    * Restore all sinon stubs and spy objects. Should be called in the `teardown` method.
    */
-  restore() {
+  restore(): void {
     this.showDialogStub.restore();
   }
 }

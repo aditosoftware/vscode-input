@@ -20,6 +20,9 @@ export namespace InputBox {
  * Input for any free text.
  */
 export class InputBox extends InputBase<InputBox.InputBoxOptions> {
+  /**
+   * @override
+   */
   async showDialog(
     _currentResults: DialogValues,
     currentStep: number,

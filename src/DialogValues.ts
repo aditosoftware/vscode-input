@@ -27,7 +27,7 @@ export class DialogValues {
    * @param inputName - the name of the input which was used to get any value from the user
    * @param result - the result given by the user
    */
-  addValue(inputName: string, result: string | string[] | boolean) {
+  addValue(inputName: string, result: string | string[] | boolean): void {
     if (typeof result === "boolean") {
       this.confirmation = result;
     } else {
