@@ -11,7 +11,7 @@ export let logger: Logger;
  *
  * @param pLogger - the logger that should be used for every logging
  */
-export function initializeLogger(pLogger: Logger) {
+export function initializeLogger(pLogger: Logger): void {
   logger = pLogger;
 }
 
@@ -19,6 +19,7 @@ export function initializeLogger(pLogger: Logger) {
  * Handles a multi-step input. All the inputs will be progressed in order.
  * If any input comes back as undefined, then an information message will be shown to the user
  * and nothing will be returned.
+ *
  * @param inputs - the inputs that should be progressed
  * @param dialogValues - the dialog values with any values that were given before the multi-step-input was called.
  * @returns the dialog values from the inputs

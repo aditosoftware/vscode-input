@@ -285,9 +285,10 @@ suite("QuickPick tests", () => {
 
 /**
  * Asserts that `item2` is the selected item and that the items contains `item1`, `item2` (picked), and `item3`.
+ *
  * @param quickPickWithAccept - the quickPick that should be checked
  */
-function assertItem2WasSelected(quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>) {
+function assertItem2WasSelected(quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>): void {
   assert.deepStrictEqual(
     quickPickWithAccept.selectedItems,
     [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
@@ -306,6 +307,7 @@ function assertItem2WasSelected(quickPickWithAccept: vscode.QuickPick<vscode.Qui
 
 /**
  * Shows the dialog and asserts the result of the dialog.
+ *
  * @param expected - the expected result of the dialog
  * @param quickPick - the quick pick that should be used for showing the dialog
  * @param currentStep - the current step of the dialog
@@ -316,7 +318,7 @@ async function showDialogAndAssert(
   quickPick: QuickPick,
   currentStep: number = 2,
   dialogValues: DialogValues = new DialogValues()
-) {
+): Promise<void> {
   const result = await quickPick.showDialog(dialogValues, currentStep, 4);
 
   assert.deepStrictEqual(expected, result);

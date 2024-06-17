@@ -57,7 +57,8 @@ export abstract class InputBase<T extends InputBaseOptions> {
 
   /**
    * Constructor.
-   * @param options - the options of any input element.
+   *
+   * @param inputOptions - the options of any input element
    */
   constructor(inputOptions: T) {
     this.inputOptions = inputOptions;
@@ -68,7 +69,7 @@ export abstract class InputBase<T extends InputBaseOptions> {
    *
    * **Note:** If you override this method, you will need async.
    *
-   * @param currentResults  - the current results of the dialog
+   * @param currentResults - the current results of the dialog
    * @param currentStep - the current step number of the dialog
    * @param maximumStep - the maximum step number of the dialog
    * @returns the inputted value or undefined, when any error / invalid input occurs
@@ -89,6 +90,7 @@ export abstract class InputBase<T extends InputBaseOptions> {
   /**
    * Generate a step output that will read `(Step <current> of <maximum>)`.
    * This should be included in the title of the dialogs.
+   *
    * @param currentStep - the current step number of the dialog
    * @param maximumStep - the maximum step number of the dialog
    * @returns the step output

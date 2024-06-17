@@ -21,6 +21,9 @@ export namespace OpenDialog {
  * Input for any Open Dialog (files and directory).
  */
 export class OpenDialog extends InputBase<OpenDialog.OpenDialogOptions> {
+  /**
+   * @override
+   */
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,

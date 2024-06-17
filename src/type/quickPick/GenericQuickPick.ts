@@ -17,7 +17,7 @@ export type QuickPickItemFunction = (
  */
 export interface GenericQuickPickOptions extends InputBaseOptions {
   /**
-   *  The title of the quick pick.
+   * The title of the quick pick.
    */
   readonly title: string;
 

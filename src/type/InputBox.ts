@@ -20,6 +20,9 @@ export namespace InputBox {
  * Input for any free text.
  */
 export class InputBox extends InputBase<InputBox.InputBoxOptions> {
+  /**
+   * @override
+   */
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
@@ -102,7 +105,7 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
    * @param text - the currently given text
    * @param inputBox - the input box
    */
-  private async validateInput(options: vscode.InputBoxOptions, text: string, inputBox: vscode.InputBox) {
+  private async validateInput(options: vscode.InputBoxOptions, text: string, inputBox: vscode.InputBox): Promise<void> {
     if (options.validateInput) {
       const validationMessage = await options.validateInput(text);
       if (validationMessage) {

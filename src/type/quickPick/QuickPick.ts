@@ -21,6 +21,9 @@ export namespace QuickPick {
  * Any quick pick that does not require any sort of loading.
  */
 export class QuickPick extends GenericQuickPick<QuickPick.QuickPickOptions> {
+  /**
+   * @override
+   */
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,

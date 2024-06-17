@@ -25,7 +25,7 @@ export namespace LoadingQuickPick {
     readonly reloadItems?: QuickPickItemFunction;
 
     /**
-     *  The tooltip that should be shown when reloading
+     * The tooltip that should be shown when reloading
      */
     readonly reloadTooltip: string;
   }
@@ -38,6 +38,9 @@ export namespace LoadingQuickPick {
  * If you don't have any data that needs loading or your data is expected to have a very short loading time, then you should use QuickPick
  */
 export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQuickPickOptions> {
+  /**
+   * @override
+   */
   async showDialog(
     currentResults: DialogValues,
     currentStep: number,
@@ -84,12 +87,12 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
             // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
             setTimeout(() => {
               // load the items and then update title and items
-              this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults).then(
-                (result) => {
+              this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults)
+                .then((result) => {
                   this.handlePostLoading(quickPick, currentStep, maximumStep, result, currentResults);
                   logger.debug({ message: `Reload done for ${this.inputOptions.title}` });
-                }
-              );
+                })
+                .catch((error) => logger.error({ message: "error loading the data", error }));
             }, 1);
           }
         }),
@@ -108,6 +111,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
 
   /**
    * Blocks the quick pick for loading.
+   *
    * @param quickPick - the real quick pick component
    * @param currentStep - the current dialog step
    * @param maximumStep - the maximum dialog step
@@ -125,6 +129,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
 
   /**
    * Enables the quick pick after the loading and sets the new items.
+   *
    * @param quickPick - the real quick pick component
    * @param currentStep - the current dialog step
    * @param maximumStep - the maximum dialog step
