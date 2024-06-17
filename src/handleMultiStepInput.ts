@@ -92,7 +92,7 @@ export async function handleMultiStepInput(
    *
    * @returns the new index for the loop
    */
-  function handleGoingBack() {
+  function handleGoingBack(): number {
     const goToStep = steps.pop() ?? { stepNumber: 1, index: 0, totalNumber: inputs.length };
     currentStep = goToStep.stepNumber;
     totalNumber = goToStep.totalNumber;

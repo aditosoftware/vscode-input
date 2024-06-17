@@ -76,19 +76,21 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
 
       quickPick.items.forEach((pItem) => {
         const label = pItem.label;
-        if (oldValues) {
-          if (oldValues.includes(label)) {
-            // if the current item was in the oldValues, then pick it
-            pItem.picked = true;
-            selectedItems.push(pItem);
-          }
+        if (oldValues && oldValues.includes(label)) {
+          // if the current item was in the oldValues, then pick it
+          pItem.picked = true;
+          selectedItems.push(pItem);
         } else if (pItem.picked) {
           // if there are no old values, then set the selected  items to the picked items
           selectedItems.push(pItem);
         }
+        // There exists not fallback - either we select the given old values or the picked items that were loaded as picked.
+        // If we do not have any of those two cases, then nothing should be picked immediately.
       });
 
-      quickPick.selectedItems = selectedItems;
+      if (selectedItems && selectedItems.length !== 0) {
+        quickPick.selectedItems = selectedItems;
+      }
     }
   }
 }
