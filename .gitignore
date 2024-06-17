@@ -12,3 +12,4 @@ eslint-results.json
 
 # misc
 .DS_Store
+*.tgz

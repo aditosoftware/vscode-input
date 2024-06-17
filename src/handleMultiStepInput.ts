@@ -1,3 +1,4 @@
+import { LinkList } from "@js-sdsl/link-list";
 import { InputBase, DialogValues, InputBaseOptions, InputAction } from ".";
 import { Logger } from "@aditosoftware/vscode-logging";
 
@@ -38,10 +39,14 @@ export async function handleMultiStepInput(
 
   let totalNumber: number = inputs.length;
 
-  const steps: { stepNumber: number; index: number; totalNumber: number }[] = [];
+  const steps: { name: string; stepNumber: number; totalNumber: number }[] = [];
 
-  for (let i = 0; i < inputs.length; i++) {
-    const input = inputs[i];
+  // iterate over the inputs with a link list
+  const inputList = new LinkList(inputs);
+  let iterator = inputList.begin();
+
+  while (iterator.isAccessible()) {
+    const input = iterator.pointer;
 
     // check if input is needed
     if (!input.inputOptions.onBeforeInput || input.inputOptions.onBeforeInput(dialogValues)) {
@@ -59,7 +64,7 @@ export async function handleMultiStepInput(
 
       if (result === InputAction.BACK) {
         // if the back button was pressed, set index and step counter to the last valid used elements
-        i = handleGoingBack();
+        handleGoingBack();
         goingBackProcess = true;
         continue;
       }
@@ -72,15 +77,20 @@ export async function handleMultiStepInput(
       input.inputOptions.onAfterInput?.(dialogValues);
 
       // save the last valid step for going back
-      steps.push({ stepNumber: currentStep, index: i, totalNumber });
+      steps.push({ stepNumber: currentStep, totalNumber, name: input.inputOptions.name });
 
       currentStep++;
-    } else if (goingBackProcess) {
-      // if we are going back and skipping, then just go back one more step
-      i = handleGoingBack();
-    } else {
+    } else if (!goingBackProcess) {
       // input not needed, count down total number
       totalNumber--;
+    }
+
+    if (goingBackProcess) {
+      // if we are going back and skipping, then just go back one more step
+      handleGoingBack();
+    } else {
+      // otherwise, get the next input
+      iterator = iterator.next();
     }
   }
 
@@ -90,13 +100,20 @@ export async function handleMultiStepInput(
    * Handles the going back in the multi-step-input.
    *
    * This will remove the last step from the taken steps and sets current step count and total number to the correct value.
-   *
-   * @returns the new index for the loop
    */
-  function handleGoingBack(): number {
-    const goToStep = steps.pop() ?? { stepNumber: 1, index: 0, totalNumber: inputs.length };
+  function handleGoingBack(): void {
+    const goToStep = steps.pop() ?? { stepNumber: 1, totalNumber: inputs.length, name: undefined };
     currentStep = goToStep.stepNumber;
     totalNumber = goToStep.totalNumber;
-    return goToStep.index - 1;
+
+    if (goToStep.name) {
+      let element = iterator.pointer;
+
+      // go back until the name is the same as the name of the last step
+      while (element.inputOptions.name !== goToStep.name) {
+        iterator = iterator.pre();
+        element = iterator.pointer;
+      }
+    }
   }
 }

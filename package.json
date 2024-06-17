@@ -29,5 +29,8 @@
   },
   "peerDependencies": {
     "@aditosoftware/vscode-logging": "1.x.x"
+  },
+  "dependencies": {
+    "@js-sdsl/link-list": "^4.4.2"
   }
 }
