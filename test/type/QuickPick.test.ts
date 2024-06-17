@@ -170,10 +170,11 @@ suite("QuickPick tests", () => {
 
 /**
  * Shows the dialog and asserts the result of the dialog.
+ *
  * @param expected - the expected result of the dialog
  * @param quickPick - the quick pick that should be used for showing the dialog
  */
-async function showDialogAndAssert(expected: string[] | undefined, quickPick: QuickPick) {
+async function showDialogAndAssert(expected: string[] | undefined, quickPick: QuickPick): Promise<void> {
   const result = await quickPick.showDialog(new DialogValues(), 2, 4);
 
   assert.deepStrictEqual(expected, result);

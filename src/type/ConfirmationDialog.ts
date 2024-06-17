@@ -10,12 +10,13 @@ export namespace ConfirmationDialog {
    */
   export interface ConfirmationDialogOptions extends InputBaseOptions {
     /**
-     *  The normal message of the dialog.
+     * The normal message of the dialog.
      */
     readonly message: string;
 
     /**
      * The detail message of this modal dialog. This will be dynamically generated from the other inputs.
+     *
      * @param currentResult - the current dialog results
      * @returns the generated detail message
      */
@@ -33,6 +34,9 @@ export namespace ConfirmationDialog {
  * This dialog will be shown as a modal dialog and therefore be in the front.
  */
 export class ConfirmationDialog extends InputBase<ConfirmationDialog.ConfirmationDialogOptions> {
+  /**
+   * @override
+   */
   async showDialog(currentResults: DialogValues): Promise<boolean | undefined> {
     // show the dialog and only return true, if Yes was selected
     const answer = await vscode.window.showInformationMessage(
