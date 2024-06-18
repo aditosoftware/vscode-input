@@ -1,6 +1,6 @@
 {
   "name": "@aditosoftware/vscode-input",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "description": "Input components for any vscode extension",
   "main": "out/src/index.js",
@@ -29,5 +29,8 @@
   },
   "peerDependencies": {
     "@aditosoftware/vscode-logging": "1.x.x"
+  },
+  "dependencies": {
+    "@js-sdsl/link-list": "^4.4.2"
   }
 }

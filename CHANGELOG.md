@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+## 1.0.2
+
+### Added
+
+- QuickPick: Added back button
+- InputBox: Added back button
+- LoadingQuickPick: Added back button
+
 ## 1.0.1
 
 ### Added

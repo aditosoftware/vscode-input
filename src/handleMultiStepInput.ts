@@ -1,4 +1,5 @@
-import { InputBase, DialogValues, InputBaseOptions } from ".";
+import { LinkList, LinkListIterator } from "@js-sdsl/link-list";
+import { InputBase, DialogValues, InputBaseOptions, InputAction } from ".";
 import { Logger } from "@aditosoftware/vscode-logging";
 
 /**
@@ -28,39 +29,150 @@ export async function handleMultiStepInput(
   inputs: InputBase<InputBaseOptions>[],
   dialogValues?: DialogValues
 ): Promise<DialogValues | undefined> {
-  let currentStep: number = 1;
+  dialogValues = dialogValues ?? new DialogValues();
 
-  if (!dialogValues) {
-    dialogValues = new DialogValues();
-  }
+  let currentStep: Step = { stepNumber: 1, totalNumber: inputs.length };
 
-  let totalNumber: number = inputs.length;
+  const takenSteps: Step[] = [];
 
-  for (const input of inputs) {
-    // check if input is needed
-    if (!input.inputOptions.onBeforeInput || input.inputOptions.onBeforeInput(dialogValues)) {
-      // if needed, then show dialog
-      const result = await input.showDialog(dialogValues, currentStep, totalNumber);
+  // iterate over the inputs with a link list
+  const inputList = new LinkList(inputs);
+  const iterator = inputList.begin();
 
-      if (!result) {
-        // User canceled the selection
-        logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
-        return;
-      }
+  while (iterator.isAccessible()) {
+    const stepResult = await handleInputStep(dialogValues, iterator, takenSteps, currentStep);
 
-      dialogValues.addValue(input.inputOptions.name, result);
-
-      // if there is some special behavior after the input, handle it
-      if (input.inputOptions.onAfterInput) {
-        input.inputOptions.onAfterInput(dialogValues);
-      }
-
-      currentStep++;
-    } else {
-      // input not needed, count down total number
-      totalNumber--;
+    if (!stepResult) {
+      return;
     }
+
+    currentStep = stepResult;
   }
 
   return dialogValues;
 }
+
+/**
+ * Handles the input of one step.
+ *
+ * @param dialogValues - the current dialog values
+ * @param iterator - the iterator for stepping forward and backward in the steps
+ * @param takenSteps - the already taken steps
+ * @param currentStep - the current step
+ * @returns the next step that should be taken
+ */
+async function handleInputStep(
+  dialogValues: DialogValues,
+  iterator: LinkListIterator<InputBase<InputBaseOptions>>,
+  takenSteps: Step[],
+  currentStep: Step
+): Promise<Step | undefined> {
+  // get the current input from the iterator
+  const input = iterator.pointer;
+
+  // check if input is needed
+  if (input.inputOptions.onBeforeInput?.(dialogValues) ?? true) {
+    // if needed, then show dialog
+    const result = await input.showDialog(dialogValues, currentStep.stepNumber, currentStep.totalNumber);
+
+    // dispose everything no longer needed from the input
+    input.dispose();
+
+    if (!result) {
+      // User canceled the selection
+      logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
+      return;
+    } else if (result === InputAction.BACK) {
+      // if the back button was pressed, set index and step counter to the last valid used elements
+      return handleGoingBack(takenSteps, currentStep, iterator);
+    } else {
+      currentStep.goingBackProcess = false;
+
+      dialogValues.addValue(input.inputOptions.name, result);
+
+      // if there is some special behavior after the input, handle it
+      input.inputOptions.onAfterInput?.(dialogValues);
+
+      // save the last valid step for going back
+      takenSteps.push({
+        stepNumber: currentStep.stepNumber,
+        totalNumber: currentStep.totalNumber,
+        name: input.inputOptions.name,
+      });
+
+      currentStep.stepNumber++;
+    }
+  } else if (!currentStep.goingBackProcess) {
+    // input not needed, count down total number
+    currentStep.totalNumber--;
+  }
+
+  if (currentStep.goingBackProcess) {
+    // if we are going back and skipping, then just go back one more step
+    return handleGoingBack(takenSteps, currentStep, iterator);
+  } else {
+    // otherwise, get the next input
+    iterator.next();
+    return currentStep;
+  }
+}
+
+/**
+ * Handles the going back in the multi-step-input.
+ *
+ * This will remove the last step from the taken steps and sets current step count and total number to the correct value.
+ *
+ * @param takenSteps - the already taken steps
+ * @param currentStep - the current step
+ * @param iterator - the iterator for stepping forward and backward in the steps
+ * @returns the step that should be taken when going back. If there is no going back is possible, then the current step will be returned.
+ */
+function handleGoingBack(
+  takenSteps: Step[],
+  currentStep: Step,
+  iterator: LinkListIterator<InputBase<InputBaseOptions>>
+): Step {
+  const goToStep = takenSteps.pop();
+
+  if (goToStep?.name) {
+    // if there is a last step
+    const lastStep: Step = { ...goToStep, goingBackProcess: true };
+
+    let element = iterator.pointer;
+
+    // go back until the name is the same as the name of the last step
+    while (element.inputOptions.name !== goToStep.name) {
+      iterator = iterator.pre();
+      element = iterator.pointer;
+    }
+
+    return lastStep;
+  } else {
+    return currentStep;
+  }
+}
+
+/**
+ * The step that was taken in the multi-step-input.
+ */
+type Step = {
+  /**
+   * The name of the current input element.
+   */
+  name?: string;
+
+  /**
+   * The current number of the step.
+   */
+  stepNumber: number;
+
+  /**
+   * The total number of all steps.
+   */
+  totalNumber: number;
+
+  /**
+   * Information, if the step process is currently going back.
+   */
+  goingBackProcess?: boolean;
+};

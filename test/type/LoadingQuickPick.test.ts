@@ -1,6 +1,6 @@
 import Sinon from "sinon";
 import * as vscode from "vscode";
-import { DialogValues, LoadingQuickPick, initializeLogger } from "../../src";
+import { DialogValues, InputAction, LoadingQuickPick, initializeLogger } from "../../src";
 import assert from "assert";
 import { Logger } from "@aditosoftware/vscode-logging";
 import path from "path";
@@ -10,6 +10,14 @@ import os from "os";
  * Tests the loading quick pick.
  */
 suite("LoadingQuickPick tests", () => {
+  /**
+   * The reload button from the dialog
+   */
+  const reloadButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon("sync"),
+    tooltip: "my reload tooltip",
+  };
+
   /**
    * The stub for creating any quick picks.
    * You need to give the created quick pick with the `returns` function.
@@ -25,6 +33,17 @@ suite("LoadingQuickPick tests", () => {
    * The quick pick element with an dummy `onDidHide` answer.
    */
   let quickPickWithHide: vscode.QuickPick<vscode.QuickPickItem>;
+
+  /**
+   * The quick pick element with a dummy `onDidTriggerButton` answer for the back button.
+   */
+  let quickPickWithOnTriggerBackButton: vscode.QuickPick<vscode.QuickPickItem>;
+
+  const generatedItems = [
+    { label: "normal item" },
+    { label: "Item 1", description: "Description 1", detail: "Detail 1", picked: true },
+    { label: "Item 2", description: "Description 1", detail: "Detail 1", picked: true },
+  ];
 
   /**
    * Creates the necessary stubs before each test.
@@ -45,6 +64,13 @@ suite("LoadingQuickPick tests", () => {
     // and transforms this any element back to an vscode.QuickPick, so it can be returned by createQuickPick
     quickPickWithHide = copyElementWithHide as vscode.QuickPick<vscode.QuickPickItem>;
 
+    // copies the normal quick again to add an dummy onDidTriggerButton function that will trigger for the back button.
+    const copyElementWithBackButtonTrigger = Object.create(quickPick);
+    copyElementWithBackButtonTrigger.onDidTriggerButton = (callback: (button: vscode.QuickInputButton) => void) =>
+      callback(vscode.QuickInputButtons.Back);
+    // and transforms this any element back to an vscode.QuickPick, so it can be returned by createQuickPick
+    quickPickWithOnTriggerBackButton = copyElementWithBackButtonTrigger as vscode.QuickPick<vscode.QuickPickItem>;
+
     createQuickPick = Sinon.stub(vscode.window, "createQuickPick");
   });
 
@@ -53,6 +79,50 @@ suite("LoadingQuickPick tests", () => {
    */
   teardown("restore", () => {
     createQuickPick.restore();
+  });
+
+  /**
+   * Tests that a given value for the name will be inputted into the value of the element.
+   */
+  test("should take old value", async () => {
+    const name = "loadingQuickPick";
+    const value = "item2";
+
+    const dialogValues = new DialogValues();
+    dialogValues.addValue(name, [value]);
+
+    createQuickPick.returns(quickPickWithHide);
+
+    const loadingQuickPick = new LoadingQuickPick({
+      name,
+      title: "My title",
+      loadingTitle: "My loading title",
+      generateItems: () => [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2" },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ],
+      reloadItems: () => [{ label: "reload item" }],
+      reloadTooltip: "my reload tooltip",
+      allowMultiple: true,
+    });
+
+    await loadingQuickPick.showDialog(dialogValues, 2, 4);
+
+    assert.deepStrictEqual(
+      quickPickWithHide.selectedItems,
+      [{ label: "item2", description: "description2", detail: "detail2", picked: true }] as vscode.QuickPickItem[],
+      "selected items"
+    );
+    assert.deepStrictEqual(
+      quickPickWithHide.items,
+      [
+        { label: "item1", description: "description1", detail: "detail1" },
+        { label: "item2", description: "description2", detail: "detail2", picked: true },
+        { label: "item3", description: "description3", detail: "detail3" },
+      ] as vscode.QuickPickItem[],
+      "items"
+    );
   });
 
   /**
@@ -74,6 +144,27 @@ suite("LoadingQuickPick tests", () => {
     const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
 
     assert.deepStrictEqual(undefined, result);
+  });
+
+  /**
+   * Tests that the back button will be correctly triggered
+   */
+  test("should trigger back button correctly", async () => {
+    createQuickPick.returns(quickPickWithOnTriggerBackButton);
+
+    const loadingQuickPick = new LoadingQuickPick({
+      name: "loadingQuickPick",
+      title: "My title",
+      loadingTitle: "My loading title",
+      generateItems: () => generatedItems,
+      reloadItems: () => [],
+      reloadTooltip: "my reload tooltip",
+    });
+
+    await showAndAssert(loadingQuickPick, InputAction.BACK, quickPickWithOnTriggerBackButton, 2, [
+      reloadButton,
+      vscode.QuickInputButtons.Back,
+    ]);
   });
 
   /**
@@ -117,12 +208,6 @@ suite("LoadingQuickPick tests", () => {
     };
 
     /**
-     * A stub of the getter of the selected items of a quick pick. This is used to return some dummy selected items for `quickPickWithAccept`.
-     * It is not needed to set those items by yourself, this will be done in the setup.
-     */
-    let getSelectedItems: Sinon.SinonStub;
-
-    /**
      * The expected item that should be returned in `getSelectedItems`.
      * Note: `getSelectedItems` will return an array of `vscode.QuickPickItem` and these are the labels of those items.
      */
@@ -140,15 +225,6 @@ suite("LoadingQuickPick tests", () => {
       placeholderSet = Sinon.spy(quickPickWithAccept, "placeholder", ["set"]);
       busySet = Sinon.spy(quickPickWithAccept, "busy", ["set"]);
       enabledSet = Sinon.spy(quickPickWithAccept, "enabled", ["set"]);
-
-      // return some dummy items when the selectedItems will be returned
-      // if this selection will be changed, you need to update `expectedItems` as well
-      getSelectedItems = Sinon.stub(quickPickWithAccept, "selectedItems").get(() => {
-        return [
-          { label: "Item 1", description: "Description 1", detail: "Detail 1" },
-          { label: "Item 2", description: "Description 1", detail: "Detail 1" },
-        ];
-      });
     });
 
     /**
@@ -159,8 +235,6 @@ suite("LoadingQuickPick tests", () => {
       placeholderSet.set.restore();
       busySet.set.restore();
       enabledSet.set.restore();
-
-      getSelectedItems.restore();
 
       clock.restore();
     });
@@ -175,28 +249,50 @@ suite("LoadingQuickPick tests", () => {
         name: "loadingQuickPick",
         title: "My title",
         loadingTitle: "My loading title",
-        generateItems: () => [{ label: "normal item" }],
+        generateItems: () => generatedItems,
         reloadItems: () => [{ label: "reload item" }],
         reloadTooltip: "my reload tooltip",
         allowMultiple: true,
       });
 
-      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 2, [
+        reloadButton,
+        vscode.QuickInputButtons.Back,
+      ]);
 
       assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
 
       validateResults(false, titleSet, placeholderSet, busySet, enabledSet, "Select any number of items");
     });
 
+    /**
+     * Tests that there is no back button when it was the first step.
+     */
+    test("should not have back button when first step", async () => {
+      createQuickPick.returns(quickPickWithAccept);
+
+      const loadingQuickPick = new LoadingQuickPick({
+        name: "loadingQuickPick",
+        title: "My title",
+        loadingTitle: "My loading title",
+        generateItems: () => generatedItems,
+        reloadItems: () => [{ label: "reload item" }],
+        reloadTooltip: "my reload tooltip",
+        allowMultiple: true,
+      });
+
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 1, [reloadButton]);
+    });
+
     [
       {
         name: "with separate reload function",
-        expected: "reload item",
+        expected: ["reload item"],
         reloadItems: () => [{ label: "reload item" }],
       },
       {
         name: "without separate reload function",
-        expected: "normal item",
+        expected: ["normal item", "Item 1", "Item 2"],
         reloadItems: undefined,
       },
     ].forEach((pElement) => {
@@ -222,23 +318,33 @@ suite("LoadingQuickPick tests", () => {
         // trigger method for reload button press
         const onDidTriggerButtonStub = Sinon.stub(quickPickWithAccept, "onDidTriggerButton");
 
+        const reloadTooltip = "my reload tooltip";
         const loadingQuickPick = new LoadingQuickPick({
           name: "loadingQuickPick",
           title: "My title",
           loadingTitle: "My loading title",
-          generateItems: () => [{ label: "normal item" }],
+          generateItems: () => generatedItems,
           reloadItems: pElement.reloadItems,
-          reloadTooltip: "my reload tooltip",
+          reloadTooltip,
         });
 
-        await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept);
+        await showAndAssert(loadingQuickPick, [], quickPickWithAccept, 2, [
+          reloadButton,
+          vscode.QuickInputButtons.Back,
+        ]);
 
         assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
 
         validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
 
+        // get the reload button from all the buttons
+        const foundReloadButton = quickPickWithAccept.buttons
+          .filter((pButton) => pButton.tooltip === reloadTooltip)
+          .shift();
+        assert.ok(foundReloadButton, "reload button should exist");
+
         // Trigger the reload
-        onDidTriggerButtonStub.callArgWith(0, quickPickWithAccept.buttons[0]);
+        onDidTriggerButtonStub.callArgWith(0, foundReloadButton);
 
         // advance the clock 2 ms, to trigger the callback in the setTimeout
         await clock.tickAsync(2);
@@ -254,9 +360,9 @@ suite("LoadingQuickPick tests", () => {
         );
 
         // assert that the reload item was loaded
-        assert.strictEqual(
+        assert.deepStrictEqual(
+          quickPickWithAccept.items.map((pItem) => pItem.label),
           pElement.expected,
-          quickPickWithAccept.items.map((pItem) => pItem.label).join(""),
           "items after reload"
         );
 
@@ -274,30 +380,29 @@ suite("LoadingQuickPick tests", () => {
  *
  * @param loadingQuickPick - the loading quick pick that should be used for showing the dialog
  * @param expectedItems - the expected items that should be returned by the `showDialog` function
- * @param quickPickWithAccept - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
+ * @param usedQuickPick - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
+ * @param currentStep - the current step of the input
+ * @param expectedButtons - the expected buttons of the input
  */
 async function showAndAssert(
   loadingQuickPick: LoadingQuickPick,
-  expectedItems: string[],
-  quickPickWithAccept: vscode.QuickPick<vscode.QuickPickItem>
+  expectedItems: string[] | InputAction,
+  usedQuickPick: vscode.QuickPick<vscode.QuickPickItem>,
+  currentStep: number,
+  expectedButtons: vscode.QuickInputButton[]
 ): Promise<void> {
-  const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+  const result = await loadingQuickPick.showDialog(new DialogValues(), currentStep, 4);
 
-  assert.deepStrictEqual(expectedItems, result);
+  assert.deepStrictEqual(result, expectedItems, "results");
 
-  assert.strictEqual(true, quickPickWithAccept.ignoreFocusOut, "ignoreFocusOut");
+  assert.strictEqual(usedQuickPick.ignoreFocusOut, true, "ignoreFocusOut");
+  assert.deepStrictEqual(usedQuickPick.buttons, expectedButtons, "buttons");
+
   assert.deepStrictEqual(
-    [
-      {
-        iconPath: new vscode.ThemeIcon("sync"),
-        tooltip: "my reload tooltip",
-      },
-    ],
-    quickPickWithAccept.buttons,
-    "buttons"
+    usedQuickPick.items.map((pItem) => pItem.label),
+    ["normal item", "Item 1", "Item 2"],
+    "items"
   );
-
-  assert.strictEqual("normal item", quickPickWithAccept.items.map((pItem) => pItem.label).join(""), "items");
 }
 
 /**

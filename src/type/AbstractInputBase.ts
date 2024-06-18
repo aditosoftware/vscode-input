@@ -1,4 +1,5 @@
 import { DialogValues } from "..";
+import * as vscode from "vscode";
 
 /**
  * The options of any input element.
@@ -31,6 +32,16 @@ export interface InputBaseOptions {
 }
 
 /**
+ * Indicates, that a action was triggered by the input.
+ */
+export enum InputAction {
+  /**
+   * When the back button was triggered.
+   */
+  BACK = "BACK",
+}
+
+/**
  * Any input for the extension.
  */
 export abstract class InputBase<T extends InputBaseOptions> {
@@ -38,6 +49,11 @@ export abstract class InputBase<T extends InputBaseOptions> {
    * The options of any input element.
    */
   inputOptions: T;
+
+  /**
+   * The items that need to be disposed after the `showDialog` was called.
+   */
+  protected disposables: vscode.Disposable[] = [];
 
   /**
    * Constructor.
@@ -62,7 +78,14 @@ export abstract class InputBase<T extends InputBaseOptions> {
     currentResults: DialogValues,
     currentStep: number,
     maximumStep: number
-  ): Promise<string | string[] | boolean | undefined>;
+  ): Promise<string | string[] | boolean | undefined | InputAction.BACK>;
+
+  /**
+   * Disposes everything from the given input after the dialog was shown and the values was received.
+   */
+  dispose(): void {
+    this.disposables.forEach((pDisposable) => pDisposable.dispose());
+  }
 
   /**
    * Generate a step output that will read `(Step <current> of <maximum>)`.
