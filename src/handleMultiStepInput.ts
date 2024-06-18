@@ -49,7 +49,7 @@ export async function handleMultiStepInput(
     const input = iterator.pointer;
 
     // check if input is needed
-    if (!input.inputOptions.onBeforeInput || input.inputOptions.onBeforeInput(dialogValues)) {
+    if (input.inputOptions.onBeforeInput?.(dialogValues) ?? true) {
       // if needed, then show dialog
       const result = await input.showDialog(dialogValues, currentStep, totalNumber);
 
@@ -102,11 +102,13 @@ export async function handleMultiStepInput(
    * This will remove the last step from the taken steps and sets current step count and total number to the correct value.
    */
   function handleGoingBack(): void {
-    const goToStep = steps.pop() ?? { stepNumber: 1, totalNumber: inputs.length, name: undefined };
-    currentStep = goToStep.stepNumber;
-    totalNumber = goToStep.totalNumber;
+    const goToStep = steps.pop();
 
-    if (goToStep.name) {
+    if (goToStep?.name) {
+      // if there is a last step
+      currentStep = goToStep.stepNumber;
+      totalNumber = goToStep.totalNumber;
+
       let element = iterator.pointer;
 
       // go back until the name is the same as the name of the last step
