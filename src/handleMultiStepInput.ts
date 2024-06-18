@@ -22,14 +22,14 @@ export function initializeLogger(pLogger: Logger): void {
  * and nothing will be returned.
  *
  * @param inputs - the inputs that should be progressed
- * @param pDialogValues - the dialog values with any values that were given before the multi-step-input was called.
+ * @param dialogValues - the dialog values with any values that were given before the multi-step-input was called.
  * @returns the dialog values from the inputs
  */
 export async function handleMultiStepInput(
   inputs: InputBase<InputBaseOptions>[],
-  pDialogValues?: DialogValues
+  dialogValues?: DialogValues
 ): Promise<DialogValues | undefined> {
-  const dialogValues = pDialogValues ?? new DialogValues();
+  dialogValues = dialogValues ?? new DialogValues();
 
   let currentStep: Step = { stepNumber: 1, totalNumber: inputs.length };
 
