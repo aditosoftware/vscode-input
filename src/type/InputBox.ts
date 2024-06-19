@@ -13,6 +13,26 @@ export namespace InputBox {
      * Any vscode options for the input box.
      */
     readonly inputBoxOptions?: vscode.InputBoxOptions;
+
+    /**
+     * Any custom button that should be added.
+     */
+    readonly customButton?: CustomButton;
+  }
+
+  /**
+   * The custom button that should be added.
+   */
+  interface CustomButton {
+    /**
+     * The button as it should appear in the input.
+     */
+    readonly button: vscode.QuickInputButton;
+
+    /**
+     * The action that should be triggered when the button was pressed.
+     */
+    readonly action: () => void;
   }
 }
 
@@ -57,9 +77,16 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
     inputBox.valueSelection = options.valueSelection;
 
     // add a back button when it is not the first step
+    const buttons = [];
+
     if (currentStep !== 1) {
-      inputBox.buttons = [vscode.QuickInputButtons.Back];
+      buttons.push(vscode.QuickInputButtons.Back);
     }
+    if (this.inputOptions.customButton) {
+      buttons.push(this.inputOptions.customButton.button);
+    }
+
+    inputBox.buttons = buttons;
 
     return new Promise<string | InputAction | undefined>((resolve) => {
       this.disposables.push(
@@ -67,6 +94,8 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
         inputBox.onDidTriggerButton((button) => {
           if (button === vscode.QuickInputButtons.Back) {
             resolve(InputAction.BACK);
+          } else if (button === this.inputOptions.customButton?.button) {
+            this.inputOptions.customButton.action();
           }
         }),
 
