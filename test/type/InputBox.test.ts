@@ -144,10 +144,7 @@ suite("InputBox Tests", () => {
    * Tests that the back action will be returned, when the back button was pressed.
    */
   test("should trigger back correctly", async () => {
-    const copyElementWithBack = Object.create(normalInputBox);
-    copyElementWithBack.onDidTriggerButton = (callback: (button: vscode.QuickInputButton) => void) =>
-      callback(vscode.QuickInputButtons.Back);
-    const inputBoxWithBack = copyElementWithBack as vscode.InputBox;
+    const inputBoxWithBack = createInputBoxWithButtonTrigger(normalInputBox, vscode.QuickInputButtons.Back);
 
     createInputBoxStub.returns(inputBoxWithBack);
 
@@ -156,6 +153,41 @@ suite("InputBox Tests", () => {
     const result = await inputBox.showDialog(new DialogValues(), 2, 4);
 
     assert.deepStrictEqual(result, InputAction.BACK);
+  });
+
+  /**
+   * Tests that a custom button will be added correctly and triggered as expected.
+   */
+  test("should add and trigger custom button correctly", async () => {
+    const button: vscode.QuickInputButton = {
+      iconPath: new vscode.ThemeIcon("squirrel"),
+      tooltip: "do something",
+    };
+
+    let called = false;
+
+    const inputBoxWithButtonTrigger = createInputBoxWithButtonTrigger(normalInputBox, button);
+
+    createInputBoxStub.returns(inputBoxWithButtonTrigger);
+
+    const inputBox = new InputBox({
+      name: "Unit",
+      customButton: {
+        button: button,
+        action: () => {
+          called = true;
+        },
+      },
+    });
+
+    await inputBox.showDialog(new DialogValues(), 2, 4);
+
+    assert.ok(called, "value was changed in the action");
+    assert.deepStrictEqual(
+      inputBoxWithButtonTrigger.buttons,
+      [vscode.QuickInputButtons.Back, button],
+      "button should be there"
+    );
   });
 
   [
@@ -277,6 +309,25 @@ suite("InputBox Tests", () => {
     assert.strictEqual(inputBoxWithValueChange.validationMessage, "This is invalid: foo", "validationMessage");
   });
 });
+
+/**
+ * Creates an input box. This will have its `onDidTriggerButton` (with a specific button) and `onDidHide` triggered immediately.
+ *
+ * @param normalInputBox - the normal input box on which the created input box should be based
+ * @param button - the button that should be transferred and triggered in the `onDidTriggerButton` method
+ * @returns the created input box
+ */
+function createInputBoxWithButtonTrigger(
+  normalInputBox: vscode.InputBox,
+  button: vscode.QuickInputButton
+): vscode.InputBox {
+  const copyElementWithButtonTrigger = Object.create(normalInputBox);
+  copyElementWithButtonTrigger.onDidTriggerButton = (callback: (button: vscode.QuickInputButton) => void) =>
+    callback(button);
+  copyElementWithButtonTrigger.onDidHide = (callback: () => void) => callback();
+  const inputBoxWithButtonTrigger = copyElementWithButtonTrigger as vscode.InputBox;
+  return inputBoxWithButtonTrigger;
+}
 
 /**
  * Creates an input box. This will have its `onDidChangeValue` and `onDidHide` triggered immediately.

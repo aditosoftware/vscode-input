@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+### Added
+
+- InputBox: Added the possibility to add a custom button with a given action to any input box
+
 ## 1.0.2
 
 ### Added
