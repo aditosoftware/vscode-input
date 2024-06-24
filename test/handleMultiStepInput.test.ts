@@ -90,7 +90,6 @@ suite("handleMultiStepInput test", () => {
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.strictEqual(0, result.inputValues.size, "no input values");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
   });
 
   /**
@@ -104,7 +103,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(new Map<string, string[]>([[firstElement.name, [myValue]]]), result.inputValues);
 
     Sinon.assert.calledOnce(firstElement.showDialogStub);
@@ -138,7 +136,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(
       new Map<string, string[]>([
         [firstElement.name, [firstValues]],
@@ -172,7 +169,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(
       new Map<string, string[]>([
         [firstElement.name, [firstValues]],
@@ -217,7 +213,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([beforeInputTrue.input, firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(
       new Map<string, string[]>([
         [beforeInputTrue.name, ["foo"]],
@@ -275,7 +270,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input, beforeInputFirstTrue.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(
       new Map<string, string[]>([
         [beforeInputFirstTrue.name, ["foo"]],
@@ -307,7 +301,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(new Map<string, string[]>([[firstElement.name, [firstValues]]]), result.inputValues);
 
     Sinon.assert.calledTwice(firstElement.showDialogStub);
@@ -328,7 +321,6 @@ suite("handleMultiStepInput test", () => {
       const result = await handleMultiStepInput([beforeInputTrue.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
-      assert.strictEqual(undefined, result.confirmation, "no confirmation values");
       assert.deepStrictEqual(new Map<string, string[]>([[beforeInputTrue.name, [inputBoxValue]]]), result.inputValues);
 
       Sinon.assert.calledOnce(beforeInputTrue.showDialogStub);
@@ -346,7 +338,6 @@ suite("handleMultiStepInput test", () => {
       const result = await handleMultiStepInput([beforeInputFalse.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
-      assert.strictEqual(undefined, result.confirmation, "no confirmation values");
       assert.deepStrictEqual(new Map<string, string[]>(), result.inputValues);
 
       Sinon.assert.callCount(beforeInputFalse.showDialogStub, 0);
@@ -363,7 +354,6 @@ suite("handleMultiStepInput test", () => {
       const result = await handleMultiStepInput([firstElement.input, beforeInputFalse.input, secondElement.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
-      assert.strictEqual(undefined, result.confirmation, "no confirmation values");
       // only the values from first and second box are there
       assert.deepStrictEqual([firstElement.name, secondElement.name], Array.from(result.inputValues.keys()));
 
@@ -389,7 +379,6 @@ suite("handleMultiStepInput test", () => {
       const result = await handleMultiStepInput([firstElement.input, beforeInputFalse.input, secondElement.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
-      assert.strictEqual(undefined, result.confirmation, "no confirmation values");
       // only the values from first and second box are there
       assert.deepStrictEqual(
         new Map<string, string[]>([
@@ -431,7 +420,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([inputBox]);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), result.inputValues);
     // also check that after input was set to the new map
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), afterInput);
@@ -458,7 +446,6 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput([firstElement.input], oldDialogValues);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(undefined, result.confirmation, "no confirmation values");
     assert.deepStrictEqual(
       new Map<string, string[]>([
         [firstElement.name, [myValue]],

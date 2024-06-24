@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+## 1.0.4
+
+### Removed
+
+- DialogValues: Removed 'confirmation'-property. Values for confirmation dialogs are available in the 'inputValues'-property
+
 ## 1.0.3
 
 ### Added

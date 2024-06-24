@@ -20,7 +20,6 @@ suite("DialogValues test", () => {
 
     dialogValues.addValue(name, myValue);
 
-    assert.strictEqual(undefined, dialogValues.confirmation);
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), dialogValues.inputValues);
   });
 
@@ -34,7 +33,6 @@ suite("DialogValues test", () => {
 
     dialogValues.addValue(name, myValue);
 
-    assert.strictEqual(undefined, dialogValues.confirmation);
     assert.deepStrictEqual(new Map<string, string[]>([[name, myValue]]), dialogValues.inputValues);
   });
 
@@ -45,14 +43,10 @@ suite("DialogValues test", () => {
     test(`add boolean (${pValue})`, () => {
       const dialogValues = new DialogValues();
 
-      // check no value is there
-      assert.strictEqual(undefined, dialogValues.confirmation, "no value set");
-
       // add the value
       dialogValues.addValue(name, pValue);
 
-      assert.strictEqual(pValue, dialogValues.confirmation);
-      assert.deepStrictEqual(new Map<string, string[]>(), dialogValues.inputValues);
+      assert.deepStrictEqual(new Map<string, string[]>([[name, [pValue.toString()]]]), dialogValues.inputValues);
     });
   });
 });
