@@ -7,13 +7,27 @@ import * as vscode from "vscode";
  */
 export namespace OpenDialog {
   /**
+   * Base Type for the options. This removes {@link vscode.OpenDialogOptions.title | title},
+   * because it will be set by the multi-step-input and should be the same.
+   */
+  type BaseOpenDialogOptions = Omit<vscode.OpenDialogOptions, "title">;
+
+  /**
+   * Type that requires the {@link vscode.OpenDialogOptions.openLabel | openLabel} from the {@link vscode.OpenDialogOptions}
+   * in order to have a input for the user what to select.
+   */
+  type RequiredOpenDialogOptions = BaseOpenDialogOptions & {
+    openLabel: NonNullable<BaseOpenDialogOptions["openLabel"]>;
+  };
+
+  /**
    * Any options for Open Dialogs.
    */
   export interface OpenDialogOptions extends InputBaseOptions {
     /**
      * Any vscode options for the open dialog
      */
-    readonly openDialogOptions: vscode.OpenDialogOptions;
+    readonly openDialogOptions: RequiredOpenDialogOptions;
   }
 }
 
@@ -24,20 +38,11 @@ export class OpenDialog extends InputBase<OpenDialog.OpenDialogOptions> {
   /**
    * @override
    */
-  async showDialog(
-    currentResults: DialogValues,
-    currentStep: number,
-    maximumStep: number
-  ): Promise<string[] | undefined> {
-    const stepOutput = this.generateStepOutput(currentStep, maximumStep);
-
-    // copy the options, so they will not persist during multiple dialogs
-    const options = { ...this.inputOptions.openDialogOptions };
-    if (options.title) {
-      options.title += ` ${stepOutput}`;
-    } else {
-      options.title = `Select a ${options.canSelectFolders ? "Directory" : "File"} ${stepOutput}`;
-    }
+  async showDialog(currentResults: DialogValues, title: string): Promise<string[] | undefined> {
+    // copy the options, so they will not persist during multiple dialogs.
+    // Also set them to vscode.OpenDialogOptions to be able to set the title which was omitted from our options.
+    const options: vscode.OpenDialogOptions = { ...this.inputOptions.openDialogOptions };
+    options.title = title;
 
     // find out the default uri that should be used
     const defaultUri = this.findOutDefaultUri(currentResults, options.defaultUri);

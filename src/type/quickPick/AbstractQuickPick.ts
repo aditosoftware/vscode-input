@@ -19,7 +19,7 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
     currentResults: DialogValues
   ): Promise<QuickPickItems> {
     const items: vscode.QuickPickItem[] = [];
-    let additionalTitle: string | undefined;
+    let additionalPlaceholder: string | undefined;
 
     const generatedItems = await loadFunction(currentResults);
 
@@ -27,37 +27,24 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
       items.push(...generatedItems);
     } else {
       items.push(...generatedItems.items);
-      additionalTitle = generatedItems.additionalTitle;
+      additionalPlaceholder = generatedItems.additionalPlaceholder;
     }
 
-    return { items, additionalTitle };
+    return { items, additionalPlaceholder };
   }
 
   /**
-   * Generates the whole title for the input by using the given title and the step output
+   * Generates the placeHolder for the quick picks.
    *
-   * @param pTitle - the describing text title. This should be given by creating the class
-   * @param currentStep - the current step of the input
-   * @param maximumStep - the maximum step of the input
-   * @param pAdditionalTitle - any additional title
-   * @returns the generated title
+   * @param additionalPlaceHolder - the additional placeHolder from the {@link QuickPickItem.additionalPlaceholder}
+   * @returns the placeHolder that should be used for any quick pick.
    */
-  protected generateTitle(pTitle: string, currentStep: number, maximumStep: number, pAdditionalTitle?: string): string {
-    let generatedTitle = pTitle;
-    if (pAdditionalTitle) {
-      generatedTitle += ` (${pAdditionalTitle})`;
+  protected generatePlaceHolder(additionalPlaceHolder?: string): string {
+    if (additionalPlaceHolder) {
+      return `${this.inputOptions.placeHolder} (${additionalPlaceHolder})`;
+    } else {
+      return this.inputOptions.placeHolder;
     }
-    generatedTitle += ` - ${this.generateStepOutput(currentStep, maximumStep)}`;
-    return generatedTitle;
-  }
-
-  /**
-   * Generates the placeholder by using the allowMultiple flag.
-   *
-   * @returns the generated placeholder
-   */
-  protected generatePlaceholder(): string {
-    return `Select ${this.inputOptions.allowMultiple ? "any number of items" : "one item"}`;
   }
 
   /**

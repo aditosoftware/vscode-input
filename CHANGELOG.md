@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+## 2.0.0
+
+### Added
+
+- LoadingQuickPick: made `placeHolder` available as required element in the options
+- QuickPick: added `ignoreFocusOut` as optional element in its options
+
+### Changed
+
+- General: used one title for every input and do not allow to switch the titles for any input component
+- InputBox: made `placeHolder` required in the `inputBoxOptions`
+- OpenDialog: made `openLabel` required in the `openDialogOptions`
+- QuickPick: made `placeHolder` required in the options.
+- QuickPickItems: changed property `additionalTitle` to `additionalPlaceholder`. It is now shown in the placeholders instead of the title.
+
+### Removed
+
+- InputBox: removed `title` from the `inputBoxOptions`
+- OpenDialog: removed `title` from the `openDialogOptions`
+- LoadingQuickPick: removed `loadingTitle` from the options. For loading, the title will stay the same, only the placeHolder will change to a pre-defined value.
+- QuickPick: removed `title` from the options
+- LoadingQuickPick: removed `title` from the options
+
 ## 1.0.4
 
 ### Removed

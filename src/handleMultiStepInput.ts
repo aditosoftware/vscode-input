@@ -21,11 +21,13 @@ export function initializeLogger(pLogger: Logger): void {
  * If any input comes back as undefined, then an information message will be shown to the user
  * and nothing will be returned.
  *
+ * @param title - the title for the multi step input
  * @param inputs - the inputs that should be progressed
  * @param dialogValues - the dialog values with any values that were given before the multi-step-input was called.
  * @returns the dialog values from the inputs
  */
 export async function handleMultiStepInput(
+  title: string,
   inputs: InputBase<InputBaseOptions>[],
   dialogValues?: DialogValues
 ): Promise<DialogValues | undefined> {
@@ -40,7 +42,7 @@ export async function handleMultiStepInput(
   const iterator = inputList.begin();
 
   while (iterator.isAccessible()) {
-    const stepResult = await handleInputStep(dialogValues, iterator, takenSteps, currentStep);
+    const stepResult = await handleInputStep(dialogValues, title, iterator, takenSteps, currentStep);
 
     if (!stepResult) {
       return;
@@ -56,6 +58,7 @@ export async function handleMultiStepInput(
  * Handles the input of one step.
  *
  * @param dialogValues - the current dialog values
+ * @param title - the title for the multi step input
  * @param iterator - the iterator for stepping forward and backward in the steps
  * @param takenSteps - the already taken steps
  * @param currentStep - the current step
@@ -63,6 +66,7 @@ export async function handleMultiStepInput(
  */
 async function handleInputStep(
   dialogValues: DialogValues,
+  title: string,
   iterator: LinkListIterator<InputBase<InputBaseOptions>>,
   takenSteps: Step[],
   currentStep: Step
@@ -73,7 +77,11 @@ async function handleInputStep(
   // check if input is needed
   if (input.inputOptions.onBeforeInput?.(dialogValues) ?? true) {
     // if needed, then show dialog
-    const result = await input.showDialog(dialogValues, currentStep.stepNumber, currentStep.totalNumber);
+    const result = await input.showDialog(
+      dialogValues,
+      generateStepOutput(title, currentStep.stepNumber, currentStep.totalNumber),
+      currentStep.stepNumber !== 1
+    );
 
     // dispose everything no longer needed from the input
     input.dispose();
@@ -115,6 +123,19 @@ async function handleInputStep(
     iterator.next();
     return currentStep;
   }
+}
+
+/**
+ * Generate a step output that will read `(Step <current> of <maximum>)`.
+ * This should be included in the title of the dialogs.
+ *
+ * @param title - the general title of the input
+ * @param currentStep - the current step number of the dialog
+ * @param maximumStep - the maximum step number of the dialog
+ * @returns the step output
+ */
+function generateStepOutput(title: string, currentStep: number, maximumStep: number): string {
+  return `${title} (Step ${currentStep} of ${maximumStep})`;
 }
 
 /**

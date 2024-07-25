@@ -8,6 +8,9 @@ import { QuickPickItems } from "../../src/type/quickPick/GenericQuickPick";
  * Tests for QuickPicks.
  */
 suite("QuickPick tests", () => {
+  const title = "My Title";
+  const placeHolder = "My placeholder";
+
   const normalQuickPick: vscode.QuickPick<vscode.QuickPickItem> = vscode.window.createQuickPick();
 
   /**
@@ -29,7 +32,7 @@ suite("QuickPick tests", () => {
    */
   const basicOptions = {
     name: "quickPick",
-    title: "My Title",
+    placeHolder,
   };
 
   /**
@@ -68,7 +71,7 @@ suite("QuickPick tests", () => {
 
     const quickPick = new QuickPick({ ...basicOptions, allowMultiple: true, generateItems: () => quickPickItems });
 
-    await showDialogAndAssert([value], quickPick, 2, dialogValues);
+    await showDialogAndAssert([value], quickPick, title, true, dialogValues);
 
     assertItem2WasSelected(quickPickWithAccept);
   });
@@ -85,7 +88,7 @@ suite("QuickPick tests", () => {
 
     const quickPick = new QuickPick({ ...basicOptions, allowMultiple: false, generateItems: () => quickPickItems });
 
-    await showDialogAndAssert([], quickPick, 2, dialogValues);
+    await showDialogAndAssert([], quickPick, title, true, dialogValues);
 
     assert.deepStrictEqual(quickPickWithAccept.selectedItems, []);
   });
@@ -104,60 +107,41 @@ suite("QuickPick tests", () => {
       ],
     });
 
-    await showDialogAndAssert(["item2"], quickPick);
+    await showDialogAndAssert(["item2"], quickPick, title);
 
     assertItem2WasSelected(quickPickWithAccept);
   });
 
   /**
-   * Checks if a correct title was created when `allowMultiple` was not set.
+   * Checks if the placeHolder was used that was given.
    */
-  test("should create correct title (no allowMultiple)", async () => {
+  test("should uses placeHolder correctly", async () => {
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => quickPickItems });
 
-    await showDialogAndAssert([], quickPick);
+    await showDialogAndAssert([], quickPick, title);
 
-    assert.strictEqual(quickPickWithAccept.title, "My Title - (Step 2 of 4)", "title");
+    assert.strictEqual(quickPickWithAccept.title, title);
     assert.strictEqual(quickPickWithAccept.canSelectMany, false, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, "Select one item", "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
   });
 
   /**
-   * Checks if a correct title was created when `allowMultiple` was set to `true`.
+   * Checks if a correct placeHolder was created when the loaded items has an additional placeHolder given.
    */
-  test("should create correct title (allowMultiple to true)", async () => {
-    const quickPick = new QuickPick({
-      ...basicOptions,
-      generateItems: () =>
-        quickPickItems.map((pItem) => {
-          return { ...pItem, picked: false };
-        }),
-      allowMultiple: true,
-    });
-
-    await showDialogAndAssert([], quickPick);
-
-    assert.strictEqual(quickPickWithAccept.title, "My Title - (Step 2 of 4)", "title");
-    assert.strictEqual(quickPickWithAccept.canSelectMany, true, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, "Select any number of items", "placeholder ");
-  });
-
-  /**
-   * Checks if a correct title was created when the loaded items has an additional title given.
-   */
-  test("should create correct title with additional title", async () => {
+  test("should create correct placeHolder with additional placeHolder", async () => {
+    const additionalPlaceholder = "My additional placeHolder";
     const items: QuickPickItems = {
       items: quickPickItems,
-      additionalTitle: "My additional title",
+      additionalPlaceholder,
     };
 
     const quickPick = new QuickPick({ ...basicOptions, generateItems: async () => items });
 
-    await showDialogAndAssert([], quickPick);
+    await showDialogAndAssert([], quickPick, title);
 
-    assert.strictEqual(quickPickWithAccept.title, "My Title (My additional title) - (Step 2 of 4)", "title");
+    assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, false, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, "Select one item", "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, `${placeHolder} (${additionalPlaceholder})`, "placeholder ");
   });
 
   /**
@@ -177,11 +161,11 @@ suite("QuickPick tests", () => {
       allowMultiple: true,
     });
 
-    await showDialogAndAssert([expectedLabel], quickPick);
+    await showDialogAndAssert([expectedLabel], quickPick, title);
 
-    assert.strictEqual(quickPickWithAccept.title, "My Title - (Step 2 of 4)", "title");
+    assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, true, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, "Select any number of items", "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
   });
 
   /**
@@ -198,11 +182,11 @@ suite("QuickPick tests", () => {
       allowMultiple: true,
     });
 
-    await showDialogAndAssert(["item1", "item2", "item3"], quickPick);
+    await showDialogAndAssert(["item1", "item2", "item3"], quickPick, title);
 
-    assert.strictEqual(quickPickWithAccept.title, "My Title - (Step 2 of 4)", "title");
+    assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, true, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, "Select any number of items", "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
   });
 
   /**
@@ -211,7 +195,7 @@ suite("QuickPick tests", () => {
   test("should not have back button on first step", async () => {
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => [] });
 
-    await showDialogAndAssert([], quickPick, 1);
+    await showDialogAndAssert([], quickPick, title, false);
 
     assert.deepStrictEqual(quickPickWithAccept.buttons, []);
   });
@@ -222,7 +206,7 @@ suite("QuickPick tests", () => {
   test("should have back button", async () => {
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => [] });
 
-    await showDialogAndAssert([], quickPick, 2);
+    await showDialogAndAssert([], quickPick, title, true);
 
     assert.deepStrictEqual(quickPickWithAccept.buttons, [vscode.QuickInputButtons.Back]);
   });
@@ -240,7 +224,7 @@ suite("QuickPick tests", () => {
 
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => [] });
 
-    await showDialogAndAssert(InputAction.BACK, quickPick, 2);
+    await showDialogAndAssert(InputAction.BACK, quickPick, title, true);
 
     assert.deepStrictEqual(quickPickWithOnTriggerBackButton.buttons, [vscode.QuickInputButtons.Back]);
   });
@@ -257,29 +241,54 @@ suite("QuickPick tests", () => {
 
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => [] });
 
-    await showDialogAndAssert(undefined, quickPick);
+    await showDialogAndAssert(undefined, quickPick, title);
   });
 
-  /**
-   * Tests that a given placeholder will be used correctly.
-   */
-  test("should use placeholder correctly", async () => {
-    const placeholder = "Lorem ipsum";
+  [
+    { ignoreFocusOut: undefined, expected: false },
+    { ignoreFocusOut: false, expected: false },
+    { ignoreFocusOut: true, expected: true },
+  ].forEach((pArgument) => {
+    /**
+     * Tests that a given ignoreFocusOut will be used correctly.
+     */
+    test(`should use ignoreFocusOut correctly for given value ${pArgument.ignoreFocusOut}`, async () => {
+      const quickPick = new QuickPick({
+        ...basicOptions,
+        ignoreFocusOut: pArgument.ignoreFocusOut,
+        generateItems: () => [
+          ...quickPickItems.map((pItem) => {
+            return { ...pItem, picked: true };
+          }),
+        ],
+        allowMultiple: true,
+      });
 
-    const quickPick = new QuickPick({
-      ...basicOptions,
-      placeholder: placeholder,
-      generateItems: () => [
-        ...quickPickItems.map((pItem) => {
-          return { ...pItem, picked: true };
-        }),
-      ],
-      allowMultiple: true,
+      await showDialogAndAssert(["item1", "item2", "item3"], quickPick, title);
+
+      assert.strictEqual(quickPickWithAccept.ignoreFocusOut, pArgument.expected, "ignoreFocusOut");
     });
+  });
 
-    await showDialogAndAssert(["item1", "item2", "item3"], quickPick);
+  [
+    { allowMultiple: undefined, expected: false },
+    { allowMultiple: false, expected: false },
+    { allowMultiple: true, expected: true },
+  ].forEach((pArgument) => {
+    /**
+     * Tests that a given allowMultiple will be used correctly.
+     */
+    test(`should use allowMultiple correctly for given value ${pArgument.allowMultiple}`, async () => {
+      const quickPick = new QuickPick({
+        ...basicOptions,
+        allowMultiple: pArgument.allowMultiple,
+        generateItems: () => [],
+      });
 
-    assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
+      await showDialogAndAssert([], quickPick, title);
+
+      assert.strictEqual(quickPickWithAccept.canSelectMany, pArgument.expected, "allowMultiple");
+    });
   });
 });
 
@@ -310,16 +319,18 @@ function assertItem2WasSelected(quickPickWithAccept: vscode.QuickPick<vscode.Qui
  *
  * @param expected - the expected result of the dialog
  * @param quickPick - the quick pick that should be used for showing the dialog
- * @param currentStep - the current step of the dialog
+ * @param title - the title of all dialogs
+ * @param showBackButton - if the back button should be shown
  * @param dialogValues - the current values of the dialog
  */
 async function showDialogAndAssert(
   expected: string[] | InputAction.BACK | undefined,
   quickPick: QuickPick,
-  currentStep: number = 2,
+  title: string,
+  showBackButton: boolean = true,
   dialogValues: DialogValues = new DialogValues()
 ): Promise<void> {
-  const result = await quickPick.showDialog(dialogValues, currentStep, 4);
+  const result = await quickPick.showDialog(dialogValues, title, showBackButton);
 
   assert.deepStrictEqual(expected, result);
 }

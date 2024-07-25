@@ -17,11 +17,6 @@ export type QuickPickItemFunction = (
  */
 export interface GenericQuickPickOptions extends InputBaseOptions {
   /**
-   * The title of the quick pick.
-   */
-  readonly title: string;
-
-  /**
    * Any function to generate the items for the quick pick. This can be a sync or async function.
    */
   readonly generateItems: QuickPickItemFunction;
@@ -30,6 +25,11 @@ export interface GenericQuickPickOptions extends InputBaseOptions {
    * Option, if multiple elements are allowed. If no value present, then only one element is allowed.
    */
   readonly allowMultiple?: boolean;
+
+  /**
+   * The placeholder that should be used for the input
+   */
+  readonly placeHolder: string;
 }
 
 /**
@@ -43,7 +43,7 @@ export interface QuickPickItems {
   items: vscode.QuickPickItem[];
 
   /**
-   * Any additional title. If this title was given, it will be displayed in brackets in the title of the quick pick.
+   * Any additional placeHolder. If this placeHolder was given, it will be displayed in brackets in the placeholder of the quick pick.
    */
-  additionalTitle?: string;
+  additionalPlaceholder?: string;
 }

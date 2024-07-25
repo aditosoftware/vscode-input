@@ -6,6 +6,9 @@ import { Logger } from "@aditosoftware/vscode-logging";
 import path from "path";
 import os from "os";
 
+const title = "My title";
+const placeHolder = "My placeholder";
+
 /**
  * Tests the loading quick pick.
  */
@@ -95,8 +98,7 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name,
-      title: "My title",
-      loadingTitle: "My loading title",
+      placeHolder,
       generateItems: () => [
         { label: "item1", description: "description1", detail: "detail1" },
         { label: "item2", description: "description2", detail: "detail2" },
@@ -107,7 +109,7 @@ suite("LoadingQuickPick tests", () => {
       allowMultiple: true,
     });
 
-    await loadingQuickPick.showDialog(dialogValues, 2, 4);
+    await loadingQuickPick.showDialog(dialogValues, title, true);
 
     assert.deepStrictEqual(
       quickPickWithHide.selectedItems,
@@ -133,15 +135,14 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name: "loadingQuickPick",
-      title: "My title",
-      loadingTitle: "My loading title",
+      placeHolder,
       generateItems: () => [{ label: "normal item" }],
       reloadItems: () => [{ label: "reload item" }],
       reloadTooltip: "my reload tooltip",
       allowMultiple: true,
     });
 
-    const result = await loadingQuickPick.showDialog(new DialogValues(), 2, 4);
+    const result = await loadingQuickPick.showDialog(new DialogValues(), title, true);
 
     assert.deepStrictEqual(undefined, result);
   });
@@ -154,14 +155,13 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name: "loadingQuickPick",
-      title: "My title",
-      loadingTitle: "My loading title",
+      placeHolder,
       generateItems: () => generatedItems,
       reloadItems: () => [],
       reloadTooltip: "my reload tooltip",
     });
 
-    await showAndAssert(loadingQuickPick, InputAction.BACK, quickPickWithOnTriggerBackButton, 2, [
+    await showAndAssert(loadingQuickPick, InputAction.BACK, quickPickWithOnTriggerBackButton, true, [
       reloadButton,
       vscode.QuickInputButtons.Back,
     ]);
@@ -247,22 +247,21 @@ suite("LoadingQuickPick tests", () => {
 
       const loadingQuickPick = new LoadingQuickPick({
         name: "loadingQuickPick",
-        title: "My title",
-        loadingTitle: "My loading title",
+        placeHolder,
         generateItems: () => generatedItems,
         reloadItems: () => [{ label: "reload item" }],
         reloadTooltip: "my reload tooltip",
         allowMultiple: true,
       });
 
-      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 2, [
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, true, [
         reloadButton,
         vscode.QuickInputButtons.Back,
       ]);
 
       assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
 
-      validateResults(false, titleSet, placeholderSet, busySet, enabledSet, "Select any number of items");
+      validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
     });
 
     /**
@@ -273,15 +272,14 @@ suite("LoadingQuickPick tests", () => {
 
       const loadingQuickPick = new LoadingQuickPick({
         name: "loadingQuickPick",
-        title: "My title",
-        loadingTitle: "My loading title",
+        placeHolder,
         generateItems: () => generatedItems,
         reloadItems: () => [{ label: "reload item" }],
         reloadTooltip: "my reload tooltip",
         allowMultiple: true,
       });
 
-      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, 1, [reloadButton]);
+      await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, false, [reloadButton]);
     });
 
     [
@@ -300,8 +298,6 @@ suite("LoadingQuickPick tests", () => {
        * Validates that the reload is triggered normally.
        */
       test(`should trigger reload (${pElement.name})`, async () => {
-        const selectOneItemPlaceholder = "Select one item";
-
         createQuickPick.returns(quickPickWithAccept);
 
         // create a dummy log instance for the logging
@@ -321,21 +317,20 @@ suite("LoadingQuickPick tests", () => {
         const reloadTooltip = "my reload tooltip";
         const loadingQuickPick = new LoadingQuickPick({
           name: "loadingQuickPick",
-          title: "My title",
-          loadingTitle: "My loading title",
+          placeHolder,
           generateItems: () => generatedItems,
           reloadItems: pElement.reloadItems,
           reloadTooltip,
         });
 
-        await showAndAssert(loadingQuickPick, [], quickPickWithAccept, 2, [
+        await showAndAssert(loadingQuickPick, [], quickPickWithAccept, true, [
           reloadButton,
           vscode.QuickInputButtons.Back,
         ]);
 
         assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
 
-        validateResults(false, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
+        validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
 
         // get the reload button from all the buttons
         const foundReloadButton = quickPickWithAccept.buttons
@@ -350,7 +345,7 @@ suite("LoadingQuickPick tests", () => {
         await clock.tickAsync(2);
 
         // assert that all loading was done
-        validateResults(true, titleSet, placeholderSet, busySet, enabledSet, selectOneItemPlaceholder);
+        validateResults(true, titleSet, placeholderSet, busySet, enabledSet);
 
         // check that the reload was logged
         Sinon.assert.calledTwice(debugLog);
@@ -381,17 +376,17 @@ suite("LoadingQuickPick tests", () => {
  * @param loadingQuickPick - the loading quick pick that should be used for showing the dialog
  * @param expectedItems - the expected items that should be returned by the `showDialog` function
  * @param usedQuickPick - the quick pick that is used in the background. This is used here to check some values if they are set correctly.
- * @param currentStep - the current step of the input
+ * @param showBackButton - if the back button should be shown
  * @param expectedButtons - the expected buttons of the input
  */
 async function showAndAssert(
   loadingQuickPick: LoadingQuickPick,
   expectedItems: string[] | InputAction,
   usedQuickPick: vscode.QuickPick<vscode.QuickPickItem>,
-  currentStep: number,
+  showBackButton: boolean,
   expectedButtons: vscode.QuickInputButton[]
 ): Promise<void> {
-  const result = await loadingQuickPick.showDialog(new DialogValues(), currentStep, 4);
+  const result = await loadingQuickPick.showDialog(new DialogValues(), title, showBackButton);
 
   assert.deepStrictEqual(result, expectedItems, "results");
 
@@ -413,7 +408,6 @@ async function showAndAssert(
  * @param placeholderSet - the spy of the placeholder set
  * @param busySet - the spy of the busy set
  * @param enabledSet - the spy of the enabled set
- * @param placeholderMessage - the message that is used for the placeholder. This can be different, when using `allowMultiple`
  */
 function validateResults(
   duplicate: boolean,
@@ -426,24 +420,21 @@ function validateResults(
     set: Sinon.SinonSpy<[string | undefined], void>;
   },
   busySet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
-  enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> },
-  placeholderMessage: string
+  enabledSet: PropertyDescriptor & { get: Sinon.SinonSpy<[], boolean>; set: Sinon.SinonSpy<[boolean], void> }
 ): void {
   // general call count of every element
   const callCount = duplicate ? 4 : 2;
 
   // title asserts
-  Sinon.assert.callCount(titleSet.set, callCount);
-  const loadingTitle = titleSet.set.withArgs("My loading title - (Step 2 of 4)");
-  const title = titleSet.set.withArgs("My title - (Step 2 of 4)");
-  Sinon.assert.callOrder(...(duplicate ? [loadingTitle, title, loadingTitle, title] : [loadingTitle, title]));
+  Sinon.assert.callCount(titleSet.set, 1);
+  Sinon.assert.calledWith(titleSet.set, title);
 
   // placeholder asserts
   Sinon.assert.callCount(placeholderSet.set, callCount);
   const loadingPlaceholder = placeholderSet.set.withArgs(
     "Please wait, loading is in progress. This might take a while."
   );
-  const placeholder = placeholderSet.set.withArgs(placeholderMessage);
+  const placeholder = placeholderSet.set.withArgs(placeHolder);
   Sinon.assert.callOrder(
     ...(duplicate
       ? [loadingPlaceholder, placeholder, loadingPlaceholder, placeholder]

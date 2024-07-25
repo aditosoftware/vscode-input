@@ -18,6 +18,9 @@ import { Logger } from "@aditosoftware/vscode-logging";
  * Tests that the handling of multiStepInputs works.
  */
 suite("handleMultiStepInput test", () => {
+  const title = "My title";
+  const placeHolder = "My placeholder";
+
   /**
    * Spy for the debug log.
    */
@@ -59,13 +62,13 @@ suite("handleMultiStepInput test", () => {
     debugLog = Sinon.spy(Logger.getLogger(), "debug");
 
     // creates some test elements from the inputs
-    firstElement = new TestElement(new InputBox({ name: "firstElement", inputBoxOptions: {} }));
-    secondElement = new TestElement(new InputBox({ name: "secondElement", inputBoxOptions: {} }));
+    firstElement = new TestElement(new InputBox({ name: "firstElement", inputBoxOptions: { placeHolder } }));
+    secondElement = new TestElement(new InputBox({ name: "secondElement", inputBoxOptions: { placeHolder } }));
     beforeInputTrue = new TestElement(
-      new InputBox({ name: "beforeInputTrue", inputBoxOptions: {}, onBeforeInput: () => true })
+      new InputBox({ name: "beforeInputTrue", inputBoxOptions: { placeHolder }, onBeforeInput: () => true })
     );
     beforeInputFalse = new TestElement(
-      new InputBox({ name: "beforeInputFalse", inputBoxOptions: {}, onBeforeInput: () => false })
+      new InputBox({ name: "beforeInputFalse", inputBoxOptions: { placeHolder }, onBeforeInput: () => false })
     );
   });
 
@@ -86,7 +89,7 @@ suite("handleMultiStepInput test", () => {
    * Tests that the handling works with no inputs.
    */
   test("should work with no input value", async () => {
-    const result = await handleMultiStepInput([]);
+    const result = await handleMultiStepInput(title, []);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.strictEqual(0, result.inputValues.size, "no input values");
@@ -100,13 +103,13 @@ suite("handleMultiStepInput test", () => {
 
     firstElement.showDialogStub.resolves(myValue);
 
-    const result = await handleMultiStepInput([firstElement.input]);
+    const result = await handleMultiStepInput(title, [firstElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(new Map<string, string[]>([[firstElement.name, [myValue]]]), result.inputValues);
 
     Sinon.assert.calledOnce(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 1);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
   });
 
   /**
@@ -115,12 +118,12 @@ suite("handleMultiStepInput test", () => {
   test("should work with cancelled single value", async () => {
     firstElement.showDialogStub.resolves(undefined);
 
-    const result = await handleMultiStepInput([firstElement.input]);
+    const result = await handleMultiStepInput(title, [firstElement.input]);
 
     assert.ok(typeof result === "undefined", "result is not there");
 
     Sinon.assert.calledOnce(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 1);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
   });
 
   /**
@@ -133,7 +136,7 @@ suite("handleMultiStepInput test", () => {
     const secondValues = ["a", "b", "c"];
     secondElement.showDialogStub.resolves(secondValues);
 
-    const result = await handleMultiStepInput([firstElement.input, secondElement.input]);
+    const result = await handleMultiStepInput(title, [firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(
@@ -145,9 +148,9 @@ suite("handleMultiStepInput test", () => {
     );
 
     Sinon.assert.calledOnce(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 2);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 2)`, false);
     Sinon.assert.calledOnce(secondElement.showDialogStub);
-    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, `${title} (Step 2 of 2)`, true);
   });
 
   /**
@@ -166,7 +169,7 @@ suite("handleMultiStepInput test", () => {
     const secondValues = ["a", "b", "c"];
     secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
 
-    const result = await handleMultiStepInput([firstElement.input, secondElement.input]);
+    const result = await handleMultiStepInput(title, [firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(
@@ -178,9 +181,9 @@ suite("handleMultiStepInput test", () => {
     );
 
     Sinon.assert.calledTwice(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 2);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 2)`, false);
     Sinon.assert.calledTwice(secondElement.showDialogStub);
-    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, `${title} (Step 2 of 2)`, true);
   });
 
   /**
@@ -210,7 +213,7 @@ suite("handleMultiStepInput test", () => {
     const secondValues = ["a", "b", "c"];
     secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
 
-    const result = await handleMultiStepInput([beforeInputTrue.input, firstElement.input, secondElement.input]);
+    const result = await handleMultiStepInput(title, [beforeInputTrue.input, firstElement.input, secondElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(
@@ -223,11 +226,11 @@ suite("handleMultiStepInput test", () => {
     );
 
     Sinon.assert.calledTwice(beforeInputTrue.showDialogStub);
-    Sinon.assert.calledWith(beforeInputTrue.showDialogStub, Sinon.match.any, 1, 3);
+    Sinon.assert.calledWith(beforeInputTrue.showDialogStub, Sinon.match.any, `${title} (Step 1 of 3)`, false);
     Sinon.assert.calledThrice(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 2, 3);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 2 of 3)`, true);
     Sinon.assert.calledTwice(secondElement.showDialogStub);
-    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 3, 3);
+    Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, `${title} (Step 3 of 3)`, true);
   });
 
   /**
@@ -249,7 +252,7 @@ suite("handleMultiStepInput test", () => {
     const beforeInputFirstTrue = new TestElement(
       new InputBox({
         name: "beforeInputFirstTrue",
-        inputBoxOptions: {},
+        inputBoxOptions: { placeHolder },
         onBeforeInput: () => {
           if (shouldShow) {
             shouldShow = false;
@@ -267,7 +270,11 @@ suite("handleMultiStepInput test", () => {
     const secondValues = ["a", "b", "c"];
     secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(secondValues);
 
-    const result = await handleMultiStepInput([firstElement.input, beforeInputFirstTrue.input, secondElement.input]);
+    const result = await handleMultiStepInput(title, [
+      firstElement.input,
+      beforeInputFirstTrue.input,
+      secondElement.input,
+    ]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(
@@ -280,15 +287,15 @@ suite("handleMultiStepInput test", () => {
     );
 
     Sinon.assert.calledTwice(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub.firstCall, Sinon.match.any, 1, 3);
-    Sinon.assert.calledWith(firstElement.showDialogStub.secondCall, Sinon.match.any, 1, 3);
+    Sinon.assert.calledWith(firstElement.showDialogStub.firstCall, Sinon.match.any, `${title} (Step 1 of 3)`, false);
+    Sinon.assert.calledWith(firstElement.showDialogStub.secondCall, Sinon.match.any, `${title} (Step 1 of 3)`, false);
 
     Sinon.assert.calledOnce(beforeInputFirstTrue.showDialogStub);
-    Sinon.assert.calledWith(beforeInputFirstTrue.showDialogStub, Sinon.match.any, 2, 3);
+    Sinon.assert.calledWith(beforeInputFirstTrue.showDialogStub, Sinon.match.any, `${title} (Step 2 of 3)`, true);
 
     Sinon.assert.calledTwice(secondElement.showDialogStub);
-    Sinon.assert.calledWith(secondElement.showDialogStub.firstCall, Sinon.match.any, 3, 3);
-    Sinon.assert.calledWith(secondElement.showDialogStub.secondCall, Sinon.match.any, 2, 2);
+    Sinon.assert.calledWith(secondElement.showDialogStub.firstCall, Sinon.match.any, `${title} (Step 3 of 3)`, true);
+    Sinon.assert.calledWith(secondElement.showDialogStub.secondCall, Sinon.match.any, `${title} (Step 2 of 2)`, true);
   });
 
   /**
@@ -298,13 +305,13 @@ suite("handleMultiStepInput test", () => {
     const firstValues = "myValue";
     firstElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(firstValues);
 
-    const result = await handleMultiStepInput([firstElement.input]);
+    const result = await handleMultiStepInput(title, [firstElement.input]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(new Map<string, string[]>([[firstElement.name, [firstValues]]]), result.inputValues);
 
     Sinon.assert.calledTwice(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 1);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
   });
 
   /**
@@ -318,13 +325,13 @@ suite("handleMultiStepInput test", () => {
       const inputBoxValue = "myValue";
       beforeInputTrue.showDialogStub.resolves(inputBoxValue);
 
-      const result = await handleMultiStepInput([beforeInputTrue.input]);
+      const result = await handleMultiStepInput(title, [beforeInputTrue.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
       assert.deepStrictEqual(new Map<string, string[]>([[beforeInputTrue.name, [inputBoxValue]]]), result.inputValues);
 
       Sinon.assert.calledOnce(beforeInputTrue.showDialogStub);
-      Sinon.assert.calledWith(beforeInputTrue.showDialogStub, Sinon.match.any, 1, 1);
+      Sinon.assert.calledWith(beforeInputTrue.showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
     });
 
     /**
@@ -335,7 +342,7 @@ suite("handleMultiStepInput test", () => {
 
       beforeInputFalse.showDialogStub.resolves(inputBoxValue);
 
-      const result = await handleMultiStepInput([beforeInputFalse.input]);
+      const result = await handleMultiStepInput(title, [beforeInputFalse.input]);
 
       assert.ok(typeof result !== "undefined", "result is there");
       assert.deepStrictEqual(new Map<string, string[]>(), result.inputValues);
@@ -351,20 +358,24 @@ suite("handleMultiStepInput test", () => {
       beforeInputFalse.showDialogStub.resolves("myValue");
       secondElement.showDialogStub.resolves("myValue");
 
-      const result = await handleMultiStepInput([firstElement.input, beforeInputFalse.input, secondElement.input]);
+      const result = await handleMultiStepInput(title, [
+        firstElement.input,
+        beforeInputFalse.input,
+        secondElement.input,
+      ]);
 
       assert.ok(typeof result !== "undefined", "result is there");
       // only the values from first and second box are there
       assert.deepStrictEqual([firstElement.name, secondElement.name], Array.from(result.inputValues.keys()));
 
       Sinon.assert.calledOnce(firstElement.showDialogStub);
-      Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 3);
+      Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 3)`, false);
 
       Sinon.assert.callCount(beforeInputFalse.showDialogStub, 0);
 
       // check that the indexes are adjusted after the skip
       Sinon.assert.calledOnce(secondElement.showDialogStub);
-      Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+      Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, `${title} (Step 2 of 2)`, true);
     });
 
     /**
@@ -376,7 +387,11 @@ suite("handleMultiStepInput test", () => {
       beforeInputFalse.showDialogStub.resolves(myValue);
       secondElement.showDialogStub.onFirstCall().resolves(InputAction.BACK).onSecondCall().resolves(myValue);
 
-      const result = await handleMultiStepInput([firstElement.input, beforeInputFalse.input, secondElement.input]);
+      const result = await handleMultiStepInput(title, [
+        firstElement.input,
+        beforeInputFalse.input,
+        secondElement.input,
+      ]);
 
       assert.ok(typeof result !== "undefined", "result is there");
       // only the values from first and second box are there
@@ -389,13 +404,13 @@ suite("handleMultiStepInput test", () => {
       );
 
       Sinon.assert.calledTwice(firstElement.showDialogStub);
-      Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 3);
+      Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 3)`, false);
 
       Sinon.assert.callCount(beforeInputFalse.showDialogStub, 0);
 
       // check that the indexes are adjusted after the skip
       Sinon.assert.calledTwice(secondElement.showDialogStub);
-      Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, 2, 2);
+      Sinon.assert.calledWith(secondElement.showDialogStub, Sinon.match.any, `${title} (Step 2 of 2)`, true);
     });
   });
 
@@ -410,14 +425,14 @@ suite("handleMultiStepInput test", () => {
 
     const inputBox = new InputBox({
       name: name,
-      inputBoxOptions: {},
+      inputBoxOptions: { placeHolder },
       onAfterInput: (dialogValues: DialogValues) => {
         afterInput = dialogValues.inputValues;
       },
     });
     const showDialogStub = Sinon.stub(inputBox, "showDialog").resolves(myValue);
 
-    const result = await handleMultiStepInput([inputBox]);
+    const result = await handleMultiStepInput(title, [inputBox]);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), result.inputValues);
@@ -425,7 +440,7 @@ suite("handleMultiStepInput test", () => {
     assert.deepStrictEqual(new Map<string, string[]>([[name, [myValue]]]), afterInput);
 
     Sinon.assert.calledOnce(showDialogStub);
-    Sinon.assert.calledWith(showDialogStub, Sinon.match.any, 1, 1);
+    Sinon.assert.calledWith(showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
 
     showDialogStub.restore();
   });
@@ -443,7 +458,7 @@ suite("handleMultiStepInput test", () => {
     const oldValue = ["myOldValue"];
     oldDialogValues.inputValues.set(oldKey, oldValue);
 
-    const result = await handleMultiStepInput([firstElement.input], oldDialogValues);
+    const result = await handleMultiStepInput(title, [firstElement.input], oldDialogValues);
 
     assert.ok(typeof result !== "undefined", "result is there");
     assert.deepStrictEqual(
@@ -463,7 +478,7 @@ suite("handleMultiStepInput test", () => {
     );
 
     Sinon.assert.calledOnce(firstElement.showDialogStub);
-    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, 1, 1);
+    Sinon.assert.calledWith(firstElement.showDialogStub, Sinon.match.any, `${title} (Step 1 of 1)`, false);
   });
 });
 
