@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+## 2.0.0
+
 ### Added
 
 - LoadingQuickPick: made `placeHolder` available as required element in the options
