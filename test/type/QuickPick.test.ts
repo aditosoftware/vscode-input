@@ -113,7 +113,7 @@ suite("QuickPick tests", () => {
   });
 
   /**
-   * Checks if the placeHolder given was used and no created placeHolder.
+   * Checks if the placeHolder was used that was given.
    */
   test("should uses placeHolder correctly", async () => {
     const quickPick = new QuickPick({ ...basicOptions, generateItems: () => quickPickItems });
