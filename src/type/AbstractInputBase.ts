@@ -70,14 +70,15 @@ export abstract class InputBase<T extends InputBaseOptions> {
    * **Note:** If you override this method, you will need async.
    *
    * @param currentResults - the current results of the dialog
-   * @param currentStep - the current step number of the dialog
-   * @param maximumStep - the maximum step number of the dialog
+   * @param title - the title of the dialog. This should not be changed, but used as is. This title is the same for every input and contains the step count.
+   * @param showBackButton - indicator, if the back button should be shown. It should not be shown, if this is the first step.
+   * Some input types does not support a back button. If the input supports a back button, then it should be shown according to this flag.
    * @returns the inputted value or undefined, when any error / invalid input occurs
    */
   abstract showDialog(
     currentResults: DialogValues,
-    currentStep: number,
-    maximumStep: number
+    title: string,
+    showBackButton: boolean
   ): Promise<string | string[] | boolean | undefined | InputAction.BACK>;
 
   /**
@@ -85,17 +86,5 @@ export abstract class InputBase<T extends InputBaseOptions> {
    */
   dispose(): void {
     this.disposables.forEach((pDisposable) => pDisposable.dispose());
-  }
-
-  /**
-   * Generate a step output that will read `(Step <current> of <maximum>)`.
-   * This should be included in the title of the dialogs.
-   *
-   * @param currentStep - the current step number of the dialog
-   * @param maximumStep - the maximum step number of the dialog
-   * @returns the step output
-   */
-  protected generateStepOutput(currentStep: number, maximumStep: number): string {
-    return `(Step ${currentStep} of ${maximumStep})`;
   }
 }

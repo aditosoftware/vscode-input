@@ -13,6 +13,9 @@ suite("InputBox Tests", () => {
 
   let createInputBoxStub: Sinon.SinonStub;
 
+  const title = "My Title";
+  const placeHolder = "My placeholder";
+
   /**
    * Creates the necessary stubs before each test.
    */
@@ -41,9 +44,9 @@ suite("InputBox Tests", () => {
 
     createInputBoxStub.returns(inputBoxWithHide);
 
-    const inputBox = new InputBox({ name: "Unit" });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
 
-    const result = await inputBox.showDialog(new DialogValues(), 2, 4);
+    const result = await inputBox.showDialog(new DialogValues(), title, true);
 
     assert.deepStrictEqual(result, undefined);
   });
@@ -58,9 +61,9 @@ suite("InputBox Tests", () => {
     const dialogValues = new DialogValues();
     dialogValues.addValue(name, value);
 
-    const inputBox = new InputBox({ name: name });
+    const inputBox = new InputBox({ name: name, inputBoxOptions: { placeHolder } });
 
-    await inputBox.showDialog(dialogValues, 2, 4);
+    await inputBox.showDialog(dialogValues, title, true);
 
     assert.strictEqual(inputBoxWithAccept.value, value);
   });
@@ -75,67 +78,45 @@ suite("InputBox Tests", () => {
     const dialogValues = new DialogValues();
     dialogValues.addValue(name, value);
 
-    const inputBox = new InputBox({ name: name, inputBoxOptions: { value: "not used old value" } });
+    const inputBox = new InputBox({ name: name, inputBoxOptions: { value: "not used old value", placeHolder } });
 
-    await inputBox.showDialog(dialogValues, 2, 4);
+    await inputBox.showDialog(dialogValues, title, true);
 
     assert.strictEqual(inputBoxWithAccept.value, value);
   });
 
   /**
-   * Tests that `showDialog` works correctly, when no `inputBoxOptions` (and therefore no title) is provided.
+   * Tests that `showDialog` works correctly, when no `inputBoxOptions` except the required ones are provided.
+   * The title is implicitly provided by the method call
    */
   test("showDialog should work correctly, if no inputBoxOptions are provided", async () => {
-    const inputBox = new InputBox({ name: "Unit" });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
+    await inputBox.showDialog(new DialogValues(), title, true);
 
-    assert.strictEqual(inputBoxWithAccept.title, "Choose a value (Step 2 of 4)");
+    assert.strictEqual(inputBoxWithAccept.title, title);
   });
 
-  /**
-   * Tests that a dummy title is created when no title is provided.
-   */
-  test("showDialog should create correct title when no title is provided", async () => {
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: {} });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
-
-    assert.strictEqual(inputBoxWithAccept.title, "Choose a value (Step 2 of 4)");
-  });
 
   /**
-   * Tests that an existing title will be correctly transformed into the title with step indicator.
+   * Tests that the input box should not have a button, when it should not show the button.
    */
-  test("showDialog should create correct title when title is provided", async () => {
-    const inputBox = new InputBox({
-      name: "Unit",
-      inputBoxOptions: { title: "My Title" },
-    });
+  test("should not have a back button when it should not show the button", async () => {
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
-
-    assert.strictEqual(inputBoxWithAccept.title, "My Title (Step 2 of 4)");
-  });
-
-  /**
-   * Tests that the input box should not have a button, when it is the first step.
-   */
-  test("should not have a back button when first step", async () => {
-    const inputBox = new InputBox({ name: "Unit" });
-
-    await inputBox.showDialog(new DialogValues(), 1, 4);
+    await inputBox.showDialog(new DialogValues(), title, false);
 
     assert.deepStrictEqual(inputBoxWithAccept.buttons, [], `No buttons should be there ${inputBoxWithAccept.buttons}`);
   });
 
   /**
-   * Tests that the input box should have a back button, when it is not the first step.
+   * Tests that the input box should have a back button, when it is requested.
    */
-  test("should have a back button when not first step", async () => {
-    const inputBox = new InputBox({ name: "Unit" });
+  test("should have a back button when requested", async () => {
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
+    await inputBox.showDialog(new DialogValues(), title, true);
 
     assert.deepStrictEqual(inputBoxWithAccept.buttons, [vscode.QuickInputButtons.Back]);
   });
@@ -148,9 +129,9 @@ suite("InputBox Tests", () => {
 
     createInputBoxStub.returns(inputBoxWithBack);
 
-    const inputBox = new InputBox({ name: "Unit" });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
 
-    const result = await inputBox.showDialog(new DialogValues(), 2, 4);
+    const result = await inputBox.showDialog(new DialogValues(), title, true);
 
     assert.deepStrictEqual(result, InputAction.BACK);
   });
@@ -172,6 +153,7 @@ suite("InputBox Tests", () => {
 
     const inputBox = new InputBox({
       name: "Unit",
+      inputBoxOptions: { placeHolder },
       customButton: {
         button: button,
         action: () => {
@@ -180,7 +162,7 @@ suite("InputBox Tests", () => {
       },
     });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
+    await inputBox.showDialog(new DialogValues(), title, true);
 
     assert.ok(called, "value was changed in the action");
     assert.deepStrictEqual(
@@ -212,11 +194,12 @@ suite("InputBox Tests", () => {
       const inputBox = new InputBox({
         name: "Unit",
         inputBoxOptions: {
+          placeHolder,
           validateInput: (pValue) => (pValue === "foo" ? "Invalid" : undefined),
         },
       });
 
-      await inputBox.showDialog(new DialogValues(), 2, 4);
+      await inputBox.showDialog(new DialogValues(), title, true);
 
       assert.strictEqual(
         inputBoxWithValueChange.validationMessage,
@@ -246,6 +229,7 @@ suite("InputBox Tests", () => {
       const inputBox = new InputBox({
         name: "Unit",
         inputBoxOptions: {
+          placeHolder,
           value: pArgument.value,
           validateInput: (pValue) => (pValue === "foo" ? "Invalid" : undefined),
         },
@@ -260,7 +244,7 @@ suite("InputBox Tests", () => {
         }, 25);
 
         inputBox
-          .showDialog(new DialogValues(), 2, 4)
+          .showDialog(new DialogValues(), title, true)
           .then((value) => {
             clearTimeout(timer);
             resolve(value);
@@ -286,10 +270,9 @@ suite("InputBox Tests", () => {
     const inputBox = new InputBox({
       name: "Unit",
       inputBoxOptions: {
-        title: "My Title",
         ignoreFocusOut: true,
         password: true,
-        placeHolder: "my placeholder",
+        placeHolder,
         prompt: "my prompt",
         value: "my value",
         valueSelection: [3, 7],
@@ -297,12 +280,12 @@ suite("InputBox Tests", () => {
       },
     });
 
-    await inputBox.showDialog(new DialogValues(), 2, 4);
+    await inputBox.showDialog(new DialogValues(), title, true);
 
-    assert.strictEqual(inputBoxWithValueChange.title, "My Title (Step 2 of 4)", "title");
+    assert.strictEqual(inputBoxWithValueChange.title, title, "title");
     assert.strictEqual(inputBoxWithValueChange.ignoreFocusOut, true, "ignoreFocusOut");
     assert.strictEqual(inputBoxWithValueChange.password, true, "password");
-    assert.strictEqual(inputBoxWithValueChange.placeholder, "my placeholder", "placeHolder");
+    assert.strictEqual(inputBoxWithValueChange.placeholder, placeHolder, "placeHolder");
     assert.strictEqual(inputBoxWithValueChange.prompt, "my prompt", "prompt");
     assert.strictEqual(inputBoxWithValueChange.value, "my value", "value");
     assert.deepStrictEqual(inputBoxWithValueChange.valueSelection, [3, 7], "valueSelection");

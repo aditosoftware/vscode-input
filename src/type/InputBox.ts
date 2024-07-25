@@ -6,13 +6,27 @@ import * as vscode from "vscode";
  */
 export namespace InputBox {
   /**
+   * Base Type for the options. This removes {@link vscode.InputBoxOptions.title | title},
+   * because it will be set by the multi-step-input and should be the same.
+   */
+  type BaseInputBoxOptions = Omit<vscode.InputBoxOptions, "title">;
+
+  /**
+   * Type that requires the {@link vscode.InputBoxOptions.placeHolder | placeHolder} from the {@link vscode.InputBoxOptions},
+   * in order to require a placeHolder input for every input box.
+   */
+  type RequiredInputBoxOptions = BaseInputBoxOptions & {
+    placeHolder: NonNullable<BaseInputBoxOptions["placeHolder"]>;
+  };
+
+  /**
    * The options for the input box.
    */
   export interface InputBoxOptions extends InputBaseOptions {
     /**
      * Any vscode options for the input box.
      */
-    readonly inputBoxOptions?: vscode.InputBoxOptions;
+    readonly inputBoxOptions: RequiredInputBoxOptions;
 
     /**
      * Any custom button that should be added.
@@ -45,21 +59,13 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
    */
   async showDialog(
     currentResults: DialogValues,
-    currentStep: number,
-    maximumStep: number
+    title: string,
+    showBackButton: boolean
   ): Promise<string | InputAction | undefined> {
     const inputBox = vscode.window.createInputBox();
 
     // copy the options, so they will not persist during multiple dialogs
-    const options: vscode.InputBoxOptions = { ...this.inputOptions.inputBoxOptions };
-    const stepOutput = this.generateStepOutput(currentStep, maximumStep);
-    if (options.title) {
-      // add the step indicator to the title
-      options.title += ` ${stepOutput}`;
-    } else {
-      // fallback, if no title was given
-      options.title = `Choose a value ${stepOutput}`;
-    }
+    const options = { ...this.inputOptions.inputBoxOptions };
 
     // find out the value to set:
     // if there is an value from the inputValues with the name, use it.
@@ -67,7 +73,7 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
     const value = currentResults.inputValues.get(this.inputOptions.name)?.[0] ?? options.value ?? "";
 
     // set all the options to the input box
-    inputBox.title = options.title;
+    inputBox.title = title;
     inputBox.value = value;
     inputBox.valueSelection = options.valueSelection;
     inputBox.prompt = options.prompt;
@@ -79,7 +85,7 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
     // add a back button when it is not the first step
     const buttons = [];
 
-    if (currentStep !== 1) {
+    if (showBackButton) {
       buttons.push(vscode.QuickInputButtons.Back);
     }
     if (this.inputOptions.customButton) {

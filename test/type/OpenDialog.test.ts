@@ -4,7 +4,13 @@ import { DialogValues, OpenDialog } from "../../src";
 import assert from "assert";
 import path from "path";
 
+/**
+ * Tests for the OpenDialog.
+ */
 suite("OpenDialog tests", () => {
+  const title = "My title";
+  const openLabel = "Select this";
+
   let showOpenDialogStub: Sinon.SinonStub;
 
   /**
@@ -33,9 +39,9 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: true } });
+    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: true, openLabel } });
 
-    await openDialog.showDialog(dialogValues, 2, 4);
+    await openDialog.showDialog(dialogValues, title);
 
     // check that the fsPath is identical in both urls
     const args = showOpenDialogStub.args[0][0];
@@ -43,7 +49,8 @@ suite("OpenDialog tests", () => {
 
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
       canSelectFiles: true,
-      title: "Select a File (Step 2 of 4)",
+      title,
+      openLabel,
       defaultUri: value,
     });
   });
@@ -60,16 +67,20 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: false, canSelectFolders: true } });
+    const openDialog = new OpenDialog({
+      name,
+      openDialogOptions: { openLabel, canSelectFiles: false, canSelectFolders: true },
+    });
 
-    await openDialog.showDialog(dialogValues, 2, 4);
+    await openDialog.showDialog(dialogValues, title);
 
     // check that the fsPath is identical in both urls
     const args = showOpenDialogStub.args[0][0];
     assert.deepStrictEqual(args.defaultUri.fsPath, value.fsPath);
 
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "Select a Directory (Step 2 of 4)",
+      title,
+      openLabel,
       defaultUri: value,
       canSelectFiles: false,
       canSelectFolders: true,
@@ -94,12 +105,16 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({ name, openDialogOptions: { canSelectFiles: true, canSelectMany: true } });
+    const openDialog = new OpenDialog({
+      name,
+      openDialogOptions: { openLabel, canSelectFiles: true, canSelectMany: true },
+    });
 
-    await openDialog.showDialog(dialogValues, 2, 4);
+    await openDialog.showDialog(dialogValues, title);
 
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "Select a File (Step 2 of 4)",
+      title,
+      openLabel,
       defaultUri: value,
       canSelectFiles: true,
       canSelectMany: true,
@@ -107,57 +122,21 @@ suite("OpenDialog tests", () => {
   });
 
   /**
-   * Tests that an automatic title is created for a file selection.
+   * Tests that the passed title is used.
    */
-  test("should create correct title when no option given (file selection)", async () => {
+  test("should use passed title", async () => {
     showOpenDialogStub.resolves(undefined);
 
-    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: {} });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { openLabel } });
 
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
-
-    assert.strictEqual(undefined, result);
-
-    Sinon.assert.calledOnce(showOpenDialogStub);
-    Sinon.assert.calledWithExactly(showOpenDialogStub, { title: "Select a File (Step 2 of 4)" });
-  });
-
-  /**
-   * Tests that an automatic title is created for a folder selection.
-   */
-  test("should create correct title when no option given (folder selection)", async () => {
-    showOpenDialogStub.resolves(undefined);
-
-    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { canSelectFolders: true } });
-
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
+    const result = await openDialog.showDialog(new DialogValues(), title);
 
     assert.strictEqual(undefined, result);
 
     Sinon.assert.calledOnce(showOpenDialogStub);
-    Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "Select a Directory (Step 2 of 4)",
-      canSelectFolders: true,
-    });
+    Sinon.assert.calledWithExactly(showOpenDialogStub, { title, openLabel });
   });
 
-  /**
-   * Tests that an exiting title is correctly used.
-   */
-  test("should use existing title", async () => {
-    showOpenDialogStub.resolves([]);
-
-    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
-
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
-
-    assert.strictEqual(undefined, result);
-
-    Sinon.assert.calledOnce(showOpenDialogStub);
-    Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "my title (Step 2 of 4)",
-    });
-  });
   /**
    * Tests that other options are preserved correctly.
    */
@@ -167,7 +146,6 @@ suite("OpenDialog tests", () => {
     const openDialog = new OpenDialog({
       name: "openDialog",
       openDialogOptions: {
-        title: "my title",
         canSelectFiles: true,
         canSelectFolders: true,
         canSelectMany: true,
@@ -179,13 +157,13 @@ suite("OpenDialog tests", () => {
       },
     });
 
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
+    const result = await openDialog.showDialog(new DialogValues(), title);
 
     assert.strictEqual(undefined, result);
 
     Sinon.assert.calledOnce(showOpenDialogStub);
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "my title (Step 2 of 4)",
+      title,
       canSelectFiles: true,
       canSelectFolders: true,
       canSelectMany: true,
@@ -205,18 +183,17 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves([uri]);
 
-    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { openLabel } });
 
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
+    const result = await openDialog.showDialog(new DialogValues(), title);
 
     assert.ok(result);
     assert.deepStrictEqual([uri.fsPath], result);
 
     Sinon.assert.calledOnce(showOpenDialogStub);
-    Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "my title (Step 2 of 4)",
-    });
+    Sinon.assert.calledWithExactly(showOpenDialogStub, { title, openLabel });
   });
+  
   /**
    * Tests that multiple input values are handled correctly.
    */
@@ -227,16 +204,14 @@ suite("OpenDialog tests", () => {
 
     showOpenDialogStub.resolves([uriA, uriB, uriC]);
 
-    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { title: "my title" } });
+    const openDialog = new OpenDialog({ name: "openDialog", openDialogOptions: { openLabel } });
 
-    const result = await openDialog.showDialog(new DialogValues(), 2, 4);
+    const result = await openDialog.showDialog(new DialogValues(), title);
 
     assert.ok(result);
     assert.deepStrictEqual([uriA.fsPath, uriB.fsPath, uriC.fsPath], result);
 
     Sinon.assert.calledOnce(showOpenDialogStub);
-    Sinon.assert.calledWithExactly(showOpenDialogStub, {
-      title: "my title (Step 2 of 4)",
-    });
+    Sinon.assert.calledWithExactly(showOpenDialogStub, { title, openLabel });
   });
 });

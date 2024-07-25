@@ -2,18 +2,16 @@ import { DialogValues, InputAction, GenericQuickPickOptions } from "../..";
 import * as vscode from "vscode";
 import { GenericQuickPick } from "./AbstractQuickPick";
 
-/**
- * Namespace for any normal quick pick
- */
 export namespace QuickPick {
   /**
    * The options that should be used for any normal quick pick.
    */
   export interface QuickPickOptions extends GenericQuickPickOptions {
     /**
-     * The placeholder that should be used for the input
+     * If the UI should stay open even when loosing UI focus. Defaults to false.
+     * This setting is ignored on iPad and is always false.
      */
-    readonly placeholder?: string;
+    readonly ignoreFocusOut?: boolean;
   }
 }
 
@@ -26,22 +24,23 @@ export class QuickPick extends GenericQuickPick<QuickPick.QuickPickOptions> {
    */
   async showDialog(
     currentResults: DialogValues,
-    currentStep: number,
-    maximumStep: number
+    title: string,
+    showBackButton: boolean
   ): Promise<string[] | InputAction | undefined> {
     const items = await this.loadItems(this.inputOptions.generateItems, currentResults);
 
     const quickPick = vscode.window.createQuickPick();
-    quickPick.title = this.generateTitle(this.inputOptions.title, currentStep, maximumStep, items.additionalTitle);
-    quickPick.placeholder = this.inputOptions.placeholder ?? this.generatePlaceholder();
+    quickPick.title = title;
+    quickPick.placeholder = this.generatePlaceHolder(items.additionalPlaceholder);
     quickPick.canSelectMany = this.inputOptions.allowMultiple ?? false;
     quickPick.items = items.items;
+    quickPick.ignoreFocusOut = this.inputOptions.ignoreFocusOut ?? false;
 
     // update the selected items if there were old values given and many values were selected
     this.setSelectedItems(quickPick, currentResults);
 
     // only show back button when not first step
-    if (currentStep !== 1) {
+    if (showBackButton) {
       quickPick.buttons = [vscode.QuickInputButtons.Back];
     }
 
