@@ -97,8 +97,6 @@ suite("InputBox Tests", () => {
     assert.strictEqual(inputBoxWithAccept.title, title);
   });
 
-
-
   /**
    * Tests that the input box should not have a button, when it should not show the button.
    */
