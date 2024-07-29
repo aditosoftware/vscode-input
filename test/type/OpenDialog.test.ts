@@ -193,7 +193,7 @@ suite("OpenDialog tests", () => {
     Sinon.assert.calledOnce(showOpenDialogStub);
     Sinon.assert.calledWithExactly(showOpenDialogStub, { title, openLabel });
   });
-  
+
   /**
    * Tests that multiple input values are handled correctly.
    */
