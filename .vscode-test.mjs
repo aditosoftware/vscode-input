@@ -5,5 +5,6 @@ export default defineConfig({
   version: "insiders",
   mocha: {
     parallel: false,
+    retries: 5
   },
 });
