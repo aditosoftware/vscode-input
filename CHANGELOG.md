@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and and th
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded dependencies:
+  - sinon to 19.0.2
+  - @vscode/test-cli to 0.0.10
+  - @vscode/test-electron to 2.4.1
+  - @types/mocha to 10.0.8
+  - @types/chai to 4.3.19
+
 ## 2.0.0
 
 ### Added
