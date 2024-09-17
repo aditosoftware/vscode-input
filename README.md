@@ -6,19 +6,17 @@ These input elements should be used for any multi step inputs.
 
 ## Installation
 
-This module is published at [GitLab](https://gitlab.adito.de/plattform/designer/vscode-input/-/packages) and [Nexus](https://nexus.adito.cloud/#browse/browse:xrm). Please check the corresponding sites on how to add the npm repository to your project.
-
-After you have added the repository to your project, you can install it normally.
+You can install this dependency normally.
 
 ```shell
-npm i @aditosoftware/vscode-input
+npm install @aditosoftware/vscode-input
 ```
 
 ## Usage
 
 ### Basic Usage
 
-Your project is expected to have any dependency to [@aditosoftware/vscode-logging](https://gitlab.adito.de/plattform/designer/vscode-logging) and configure it accordingly.
+Your project is expected to have any dependency to [@aditosoftware/vscode-logging](https://github.com/aditosoftware/vscode-logging) and configure it accordingly.
 
 Before you can start using any multi step inputs, you need to initialize the logging via `initializeLogger`. This can be done in your `activate` function of the extension.
 

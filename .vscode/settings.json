@@ -20,8 +20,13 @@
   },
   "peacock.color": "#1857a4",
   "typescript.tsserver.experimental.enableProjectDiagnostics": true,
-  "sonarlint.connectedMode.project": {
-    "connectionId": "SonarQube",
-    "projectKey": "plattform-designer-vscode-input"
-  }
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
+  "editor.formatOnPaste": true,
+  "editor.formatOnType": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.tabSize": 2
 }
