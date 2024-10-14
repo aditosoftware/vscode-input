@@ -1,5 +1,10 @@
 # vscode-input
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=aditosoftware_vscode-input&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=aditosoftware_vscode-input)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aditosoftware_vscode-input&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aditosoftware_vscode-input)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=aditosoftware_vscode-input&metric=coverage)](https://sonarcloud.io/summary/new_code?id=aditosoftware_vscode-input)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=aditosoftware_vscode-input&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=aditosoftware_vscode-input)
+
 This is used to add a simple and easy to use input elements to any VS Code extension.
 
 These input elements should be used for any multi step inputs.

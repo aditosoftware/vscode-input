@@ -66,7 +66,7 @@ export abstract class GenericQuickPick<T extends GenericQuickPickOptions> extend
 
       quickPick.items.forEach((pItem) => {
         const label = pItem.label;
-        if (oldValues && oldValues.includes(label)) {
+        if (oldValues?.includes(label)) {
           // if the current item was in the oldValues, then pick it
           pItem.picked = true;
           selectedItems.push(pItem);
