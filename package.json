@@ -21,6 +21,9 @@
     "test": "vscode-test",
     "coverage": "npm run test -- --coverage --coverage-output ./coverage --coverage-reporter html --coverage-reporter text"
   },
+  "overrides": {
+    "chai": "^5.2.0"
+  },
   "devDependencies": {
     "@aditosoftware/eslint-config-adito-platform": "latest",
     "@types/chai": "^5.0.1",
