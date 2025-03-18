@@ -83,7 +83,7 @@ async function handleInputStep(
       currentStep.stepNumber !== 1
     );
 
-    // dispose everything no longer needed from the inpuggst
+    // dispose everything no longer needed from the input
     input.dispose();
 
     if (typeof result === "undefined") {
