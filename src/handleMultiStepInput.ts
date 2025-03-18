@@ -83,10 +83,10 @@ async function handleInputStep(
       currentStep.stepNumber !== 1
     );
 
-    // dispose everything no longer needed from the input
+    // dispose everything no longer needed from the inpuggst
     input.dispose();
 
-    if (!result) {
+    if (typeof result === "undefined") {
       // User canceled the selection
       logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
       return;
