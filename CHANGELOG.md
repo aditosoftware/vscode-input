@@ -4,6 +4,12 @@ All notable changes to the "vscode-input" module will be documented in this file
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.2
+
+### Changed
+
+- HandleMultiStepInput: now checks if type of return from input is "undefined" instead of empty
+
 ## 2.0.1
 
 ### Changed
