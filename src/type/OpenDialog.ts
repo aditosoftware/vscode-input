@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import { DialogValues, InputBase, InputBaseOptions } from "..";
 import * as vscode from "vscode";
 

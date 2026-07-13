@@ -19,8 +19,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22.x
-      - name: Update npm
-        run: npm install --ignore-scripts -g npm@latest
       - run: npm -v
       - run: npm ci --ignore-scripts
       - run: npm run compile

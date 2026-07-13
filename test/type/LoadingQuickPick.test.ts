@@ -259,7 +259,7 @@ suite("LoadingQuickPick tests", () => {
         vscode.QuickInputButtons.Back,
       ]);
 
-      assert.strictEqual(true, quickPickWithAccept.canSelectMany, "canSelectMany");
+      assert.ok(quickPickWithAccept.canSelectMany, "canSelectMany");
 
       validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
     });
@@ -328,7 +328,7 @@ suite("LoadingQuickPick tests", () => {
           vscode.QuickInputButtons.Back,
         ]);
 
-        assert.strictEqual(false, quickPickWithAccept.canSelectMany, "canSelectMany");
+        assert.strictEqual(quickPickWithAccept.canSelectMany, false, "canSelectMany");
 
         validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
 

@@ -61,10 +61,9 @@ export class QuickPick extends GenericQuickPick<QuickPick.QuickPickOptions> {
         // handle the accepting. This will put the labels of the QuickPickItems into the returned element
         quickPick.onDidAccept(() => {
           resolve(quickPick.selectedItems.map((pElement) => pElement.label));
-        })
+        }),
+        quickPick
       );
-
-      this.disposables.push(quickPick);
 
       // show the quick pick
       quickPick.show();
