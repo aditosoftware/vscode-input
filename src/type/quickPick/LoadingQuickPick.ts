@@ -77,19 +77,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
           if (button === vscode.QuickInputButtons.Back) {
             resolve(InputAction.BACK);
           } else if (button === reloadButton) {
-            logger.debug({ message: `Reload triggered for ${title}` });
-            this.prepareLoading(quickPick);
-
-            // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
-            setTimeout(() => {
-              // load the items and then update title and items
-              this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults)
-                .then((result) => {
-                  this.handlePostLoading(quickPick, result, currentResults);
-                  logger.debug({ message: `Reload done for ${title}` });
-                })
-                .catch((error) => logger.error({ message: "error loading the data", error }));
-            }, 1);
+            this.handleReloadButton(title, quickPick, currentResults);
           }
         }),
 
@@ -99,10 +87,37 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
 
         quickPick.onDidHide(() => {
           resolve(undefined);
-        })
+        }),
+        quickPick
       );
-      this.disposables.push(quickPick);
     });
+  }
+
+  /**
+   * Handles the reloading of a loading quick pick.
+   *
+   * @param title - the title of the quick pick, used for logging purposes
+   * @param quickPick - the current quick pick
+   * @param currentResults - the current results of the dialog
+   */
+  private handleReloadButton(
+    title: string,
+    quickPick: vscode.QuickPick<vscode.QuickPickItem>,
+    currentResults: DialogValues
+  ): void {
+    logger.debug({ message: `Reload triggered for ${title}` });
+    this.prepareLoading(quickPick);
+
+    // dummy timeout, because I did not find any other solution how to show the busy indicator to the user
+    setTimeout(() => {
+      // load the items and then update title and items
+      this.loadItems(this.inputOptions.reloadItems ?? this.inputOptions.generateItems, currentResults)
+        .then((result) => {
+          this.handlePostLoading(quickPick, result, currentResults);
+          logger.debug({ message: `Reload done for ${title}` });
+        })
+        .catch((error) => logger.error({ message: "error loading the data", error }));
+    }, 1);
   }
 
   /**

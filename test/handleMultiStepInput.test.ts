@@ -92,7 +92,7 @@ suite("handleMultiStepInput test", () => {
     const result = await handleMultiStepInput(title, []);
 
     assert.ok(typeof result !== "undefined", "result is there");
-    assert.strictEqual(0, result.inputValues.size, "no input values");
+    assert.strictEqual(result.inputValues.size, 0, "no input values");
   });
 
   /**
