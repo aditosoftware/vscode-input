@@ -16,9 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.0
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22.x
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false  # never use caching in release builds
       - run: npm -v
       - run: npm ci --ignore-scripts
       - run: npm run compile
