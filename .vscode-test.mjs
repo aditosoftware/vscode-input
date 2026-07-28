@@ -2,9 +2,9 @@ import { defineConfig } from "@vscode/test-cli";
 
 export default defineConfig({
   files: "out/test/**/*.test.js",
-  version: "insiders",
+  version: "stable",
   mocha: {
     parallel: false,
-    retries: 5
+    retries: 5,
   },
 });
