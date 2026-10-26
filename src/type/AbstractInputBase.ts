@@ -85,6 +85,8 @@ export abstract class InputBase<T extends InputBaseOptions> {
    * Disposes everything from the given input after the dialog was shown and the values was received.
    */
   dispose(): void {
-    this.disposables.forEach((pDisposable) => pDisposable.dispose());
+    for (const pDisposable of this.disposables) {
+      pDisposable.dispose();
+    }
   }
 }

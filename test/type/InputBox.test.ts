@@ -1,7 +1,7 @@
 import Sinon from "sinon";
 import { DialogValues, InputAction, InputBox } from "../../src";
 import * as vscode from "vscode";
-import assert from "assert";
+import assert from "node:assert";
 
 /**
  * Tests the input box dialog.
@@ -14,7 +14,7 @@ suite("InputBox Tests", () => {
   let createInputBoxStub: Sinon.SinonStub;
 
   const title = "My Title";
-  const placeHolder = "My placeholder";
+  const placeholder = "My placeholder";
 
   /**
    * Creates the necessary stubs before each test.
@@ -44,7 +44,7 @@ suite("InputBox Tests", () => {
 
     createInputBoxStub.returns(inputBoxWithHide);
 
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
 
     const result = await inputBox.showDialog(new DialogValues(), title, true);
 
@@ -61,7 +61,7 @@ suite("InputBox Tests", () => {
     const dialogValues = new DialogValues();
     dialogValues.addValue(name, value);
 
-    const inputBox = new InputBox({ name: name, inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: name, inputBoxOptions: { placeHolder: placeholder } });
 
     await inputBox.showDialog(dialogValues, title, true);
 
@@ -78,7 +78,10 @@ suite("InputBox Tests", () => {
     const dialogValues = new DialogValues();
     dialogValues.addValue(name, value);
 
-    const inputBox = new InputBox({ name: name, inputBoxOptions: { value: "not used old value", placeHolder } });
+    const inputBox = new InputBox({
+      name: name,
+      inputBoxOptions: { value: "not used old value", placeHolder: placeholder },
+    });
 
     await inputBox.showDialog(dialogValues, title, true);
 
@@ -90,7 +93,7 @@ suite("InputBox Tests", () => {
    * The title is implicitly provided by the method call
    */
   test("showDialog should work correctly, if no inputBoxOptions are provided", async () => {
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
 
     await inputBox.showDialog(new DialogValues(), title, true);
 
@@ -101,7 +104,7 @@ suite("InputBox Tests", () => {
    * Tests that the input box should not have a button, when it should not show the button.
    */
   test("should not have a back button when it should not show the button", async () => {
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
 
     await inputBox.showDialog(new DialogValues(), title, false);
 
@@ -112,7 +115,7 @@ suite("InputBox Tests", () => {
    * Tests that the input box should have a back button, when it is requested.
    */
   test("should have a back button when requested", async () => {
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
 
     await inputBox.showDialog(new DialogValues(), title, true);
 
@@ -127,7 +130,7 @@ suite("InputBox Tests", () => {
 
     createInputBoxStub.returns(inputBoxWithBack);
 
-    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder } });
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
 
     const result = await inputBox.showDialog(new DialogValues(), title, true);
 
@@ -151,7 +154,7 @@ suite("InputBox Tests", () => {
 
     const inputBox = new InputBox({
       name: "Unit",
-      inputBoxOptions: { placeHolder },
+      inputBoxOptions: { placeHolder: placeholder },
       customButton: {
         button: button,
         action: () => {
@@ -170,7 +173,7 @@ suite("InputBox Tests", () => {
     );
   });
 
-  [
+  for (const pArgument of [
     {
       description: "with invalid value",
       textToValidate: "foo",
@@ -181,7 +184,7 @@ suite("InputBox Tests", () => {
       textToValidate: "bar",
       expectedValidationMessage: undefined,
     },
-  ].forEach((pArgument) => {
+  ]) {
     /**
      * Tests that the validation will work correctly in the onDidChangeValue method.
      */
@@ -192,7 +195,7 @@ suite("InputBox Tests", () => {
       const inputBox = new InputBox({
         name: "Unit",
         inputBoxOptions: {
-          placeHolder,
+          placeHolder: placeholder,
           validateInput: (pValue) => (pValue === "foo" ? "Invalid" : undefined),
         },
       });
@@ -205,10 +208,28 @@ suite("InputBox Tests", () => {
         "validationMessage"
       );
     });
+  }
+
+  /**
+   * Tests that no validation message will be set, when no `validateInput` was provided in the options.
+   */
+  test("should not set a validation message when no validateInput is provided", async () => {
+    const inputBoxWithValueChange = createInputBoxWithValueChange(normalInputBox, "foo");
+    createInputBoxStub.returns(inputBoxWithValueChange);
+
+    const inputBox = new InputBox({ name: "Unit", inputBoxOptions: { placeHolder: placeholder } });
+
+    await inputBox.showDialog(new DialogValues(), title, true);
+
+    assert.strictEqual(
+      inputBoxWithValueChange.validationMessage,
+      undefined,
+      "no validation message should be set without a validateInput option"
+    );
   });
 
   const timeoutText = "Operation timed out";
-  [
+  for (const pArgument of [
     {
       description: "with invalid value",
       value: "foo",
@@ -219,7 +240,7 @@ suite("InputBox Tests", () => {
       value: "bar",
       result: "bar",
     },
-  ].forEach((pArgument) => {
+  ]) {
     /**
      * Tests that the validation will be considered in the onDidAccept method.
      */
@@ -227,7 +248,7 @@ suite("InputBox Tests", () => {
       const inputBox = new InputBox({
         name: "Unit",
         inputBoxOptions: {
-          placeHolder,
+          placeHolder: placeholder,
           value: pArgument.value,
           validateInput: (pValue) => (pValue === "foo" ? "Invalid" : undefined),
         },
@@ -247,15 +268,15 @@ suite("InputBox Tests", () => {
             clearTimeout(timer);
             resolve(value);
           })
-          .catch((err) => {
+          .catch((error) => {
             clearTimeout(timer);
-            reject(err);
+            reject(error);
           });
       });
 
       assert.strictEqual(result, pArgument.result, "result");
     });
-  });
+  }
 
   /**
    * Tests that various InputBoxOptions will be preserved after the execution.
@@ -270,7 +291,7 @@ suite("InputBox Tests", () => {
       inputBoxOptions: {
         ignoreFocusOut: true,
         password: true,
-        placeHolder,
+        placeHolder: placeholder,
         prompt: "my prompt",
         value: "my value",
         valueSelection: [3, 7],
@@ -283,7 +304,7 @@ suite("InputBox Tests", () => {
     assert.strictEqual(inputBoxWithValueChange.title, title, "title");
     assert.strictEqual(inputBoxWithValueChange.ignoreFocusOut, true, "ignoreFocusOut");
     assert.strictEqual(inputBoxWithValueChange.password, true, "password");
-    assert.strictEqual(inputBoxWithValueChange.placeholder, placeHolder, "placeHolder");
+    assert.strictEqual(inputBoxWithValueChange.placeholder, placeholder, "placeHolder");
     assert.strictEqual(inputBoxWithValueChange.prompt, "my prompt", "prompt");
     assert.strictEqual(inputBoxWithValueChange.value, "my value", "value");
     assert.deepStrictEqual(inputBoxWithValueChange.valueSelection, [3, 7], "valueSelection");

@@ -17,6 +17,9 @@ export namespace OpenDialog {
    * in order to have a input for the user what to select.
    */
   type RequiredOpenDialogOptions = BaseOpenDialogOptions & {
+    /**
+     * The label of the open button that is required for every open dialog.
+     */
     openLabel: NonNullable<BaseOpenDialogOptions["openLabel"]>;
   };
 
@@ -41,8 +44,7 @@ export class OpenDialog extends InputBase<OpenDialog.OpenDialogOptions> {
   async showDialog(currentResults: DialogValues, title: string): Promise<string[] | undefined> {
     // copy the options, so they will not persist during multiple dialogs.
     // Also set them to vscode.OpenDialogOptions to be able to set the title which was omitted from our options.
-    const options: vscode.OpenDialogOptions = { ...this.inputOptions.openDialogOptions };
-    options.title = title;
+    const options: vscode.OpenDialogOptions = { ...this.inputOptions.openDialogOptions, title: title };
 
     // find out the default uri that should be used
     const defaultUri = this.findOutDefaultUri(currentResults, options.defaultUri);
@@ -75,30 +77,29 @@ export class OpenDialog extends InputBase<OpenDialog.OpenDialogOptions> {
       if (currentValues.length === 1) {
         // if there was only one selection, transform it back into an URI
         return vscode.Uri.file(currentValues[0]);
-      } else {
-        // otherwise, we need to find out the common path among all given values
-        const normalizedPaths = currentValues.map((pPath) => path.normalize(pPath));
-        const splitPaths = normalizedPaths.map((pPath) => pPath.split(path.sep));
-
-        // find out the command segments among all path segments
-        const commonSegments: string[] = [];
-        for (let i = 0; i < splitPaths[0].length; i++) {
-          const segment = splitPaths[0][i];
-          if (splitPaths.every((path) => path[i] === segment)) {
-            commonSegments.push(segment);
-          } else {
-            break;
-          }
-        }
-
-        // Join the common segments back into a path
-        const commonPath = path.join(...commonSegments);
-        // and transform it into and URI
-        return vscode.Uri.file(commonPath);
       }
-    } else {
-      // if there is no given selection, just use the value from the options
-      return defaultUriFromOptions;
+
+      // otherwise, we need to find out the common path among all given values
+      const normalizedPaths = currentValues.map((pPath) => path.normalize(pPath));
+      const splitPaths = normalizedPaths.map((pPath) => pPath.split(path.sep));
+
+      // find out the command segments among all path segments
+      const commonSegments: string[] = [];
+      for (let index = 0; index < splitPaths[0].length; index++) {
+        const segment = splitPaths[0][index];
+        if (splitPaths.every((path) => path[index] === segment)) {
+          commonSegments.push(segment);
+        } else {
+          break;
+        }
+      }
+
+      // Join the common segments back into a path
+      const commonPath = path.join(...commonSegments);
+      // and transform it into and URI
+      return vscode.Uri.file(commonPath);
     }
+    // if there is no given selection, just use the value from the options
+    return defaultUriFromOptions;
   }
 }

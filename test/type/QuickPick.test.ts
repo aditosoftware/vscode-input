@@ -1,7 +1,7 @@
 import Sinon from "sinon";
 import { DialogValues, InputAction, QuickPick } from "../../src";
 import * as vscode from "vscode";
-import assert from "assert";
+import assert from "node:assert";
 import { QuickPickItems } from "../../src/type/quickPick/GenericQuickPick";
 
 /**
@@ -9,7 +9,7 @@ import { QuickPickItems } from "../../src/type/quickPick/GenericQuickPick";
  */
 suite("QuickPick tests", () => {
   const title = "My Title";
-  const placeHolder = "My placeholder";
+  const placeholder = "My placeholder";
 
   const normalQuickPick: vscode.QuickPick<vscode.QuickPickItem> = vscode.window.createQuickPick();
 
@@ -32,7 +32,7 @@ suite("QuickPick tests", () => {
    */
   const basicOptions = {
     name: "quickPick",
-    placeHolder,
+    placeHolder: placeholder,
   };
 
   /**
@@ -122,7 +122,7 @@ suite("QuickPick tests", () => {
 
     assert.strictEqual(quickPickWithAccept.title, title);
     assert.strictEqual(quickPickWithAccept.canSelectMany, false, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
   });
 
   /**
@@ -141,7 +141,7 @@ suite("QuickPick tests", () => {
 
     assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, false, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, `${placeHolder} (${additionalPlaceholder})`, "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, `${placeholder} (${additionalPlaceholder})`, "placeholder ");
   });
 
   /**
@@ -165,7 +165,7 @@ suite("QuickPick tests", () => {
 
     assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, true, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
   });
 
   /**
@@ -174,11 +174,10 @@ suite("QuickPick tests", () => {
   test("should correctly handle multiple selection", async () => {
     const quickPick = new QuickPick({
       ...basicOptions,
-      generateItems: () => [
-        ...quickPickItems.map((pItem) => {
+      generateItems: () =>
+        quickPickItems.map((pItem) => {
           return { ...pItem, picked: true };
         }),
-      ],
       allowMultiple: true,
     });
 
@@ -186,7 +185,7 @@ suite("QuickPick tests", () => {
 
     assert.strictEqual(quickPickWithAccept.title, title, "title");
     assert.strictEqual(quickPickWithAccept.canSelectMany, true, "canSelectMany ");
-    assert.strictEqual(quickPickWithAccept.placeholder, placeHolder, "placeholder ");
+    assert.strictEqual(quickPickWithAccept.placeholder, placeholder, "placeholder ");
   });
 
   /**
@@ -244,11 +243,11 @@ suite("QuickPick tests", () => {
     await showDialogAndAssert(undefined, quickPick, title);
   });
 
-  [
+  for (const pArgument of [
     { ignoreFocusOut: undefined, expected: false },
     { ignoreFocusOut: false, expected: false },
     { ignoreFocusOut: true, expected: true },
-  ].forEach((pArgument) => {
+  ]) {
     /**
      * Tests that a given ignoreFocusOut will be used correctly.
      */
@@ -256,11 +255,10 @@ suite("QuickPick tests", () => {
       const quickPick = new QuickPick({
         ...basicOptions,
         ignoreFocusOut: pArgument.ignoreFocusOut,
-        generateItems: () => [
-          ...quickPickItems.map((pItem) => {
+        generateItems: () =>
+          quickPickItems.map((pItem) => {
             return { ...pItem, picked: true };
           }),
-        ],
         allowMultiple: true,
       });
 
@@ -268,13 +266,13 @@ suite("QuickPick tests", () => {
 
       assert.strictEqual(quickPickWithAccept.ignoreFocusOut, pArgument.expected, "ignoreFocusOut");
     });
-  });
+  }
 
-  [
+  for (const pArgument of [
     { allowMultiple: undefined, expected: false },
     { allowMultiple: false, expected: false },
     { allowMultiple: true, expected: true },
-  ].forEach((pArgument) => {
+  ]) {
     /**
      * Tests that a given allowMultiple will be used correctly.
      */
@@ -289,7 +287,7 @@ suite("QuickPick tests", () => {
 
       assert.strictEqual(quickPickWithAccept.canSelectMany, pArgument.expected, "allowMultiple");
     });
-  });
+  }
 });
 
 /**

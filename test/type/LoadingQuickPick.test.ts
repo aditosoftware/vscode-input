@@ -1,13 +1,13 @@
 import Sinon from "sinon";
 import * as vscode from "vscode";
 import { DialogValues, InputAction, LoadingQuickPick, initializeLogger } from "../../src";
-import assert from "assert";
+import assert from "node:assert";
 import { Logger } from "@aditosoftware/vscode-logging";
-import path from "path";
-import os from "os";
+import path from "node:path";
+import os from "node:os";
 
 const title = "My title";
-const placeHolder = "My placeholder";
+const placeholder = "My placeholder";
 
 /**
  * Tests the loading quick pick.
@@ -98,7 +98,7 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name,
-      placeHolder,
+      placeHolder: placeholder,
       generateItems: () => [
         { label: "item1", description: "description1", detail: "detail1" },
         { label: "item2", description: "description2", detail: "detail2" },
@@ -135,7 +135,7 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name: "loadingQuickPick",
-      placeHolder,
+      placeHolder: placeholder,
       generateItems: () => [{ label: "normal item" }],
       reloadItems: () => [{ label: "reload item" }],
       reloadTooltip: "my reload tooltip",
@@ -155,7 +155,7 @@ suite("LoadingQuickPick tests", () => {
 
     const loadingQuickPick = new LoadingQuickPick({
       name: "loadingQuickPick",
-      placeHolder,
+      placeHolder: placeholder,
       generateItems: () => generatedItems,
       reloadItems: () => [],
       reloadTooltip: "my reload tooltip",
@@ -180,14 +180,26 @@ suite("LoadingQuickPick tests", () => {
      * A spy of the setter of the title of a quick pick. This can be used the check if the title was overwritten correctly.
      */
     let titleSet: PropertyDescriptor & {
+      /**
+       * The spy of the getter of the title.
+       */
       get: Sinon.SinonSpy<[], string | undefined>;
+      /**
+       * The spy of the setter of the title.
+       */
       set: Sinon.SinonSpy<[string | undefined], void>;
     };
     /**
      * A spy of the setter of the placeholder of a quick pick. This can be used the check if the placeholder was overwritten correctly.
      */
     let placeholderSet: PropertyDescriptor & {
+      /**
+       * The spy of the getter of the placeholder.
+       */
       get: Sinon.SinonSpy<[], string | undefined>;
+      /**
+       * The spy of the setter of the placeholder.
+       */
       set: Sinon.SinonSpy<[string | undefined], void>;
     };
 
@@ -195,7 +207,13 @@ suite("LoadingQuickPick tests", () => {
      * A spy of the setter of the busy field of a quick pick. This can be used the check if busy was overwritten correctly.
      */
     let busySet: PropertyDescriptor & {
+      /**
+       * The spy of the getter of the busy field.
+       */
       get: Sinon.SinonSpy<[], boolean>;
+      /**
+       * The spy of the setter of the busy field.
+       */
       set: Sinon.SinonSpy<[boolean], void>;
     };
 
@@ -203,7 +221,13 @@ suite("LoadingQuickPick tests", () => {
      * A spy of the setter of the enabled field of a quick pick. This can be used the check if enabled was overwritten correctly.
      */
     let enabledSet: PropertyDescriptor & {
+      /**
+       * The spy of the getter of the enabled field.
+       */
       get: Sinon.SinonSpy<[], boolean>;
+      /**
+       * The spy of the setter of the enabled field.
+       */
       set: Sinon.SinonSpy<[boolean], void>;
     };
 
@@ -247,7 +271,7 @@ suite("LoadingQuickPick tests", () => {
 
       const loadingQuickPick = new LoadingQuickPick({
         name: "loadingQuickPick",
-        placeHolder,
+        placeHolder: placeholder,
         generateItems: () => generatedItems,
         reloadItems: () => [{ label: "reload item" }],
         reloadTooltip: "my reload tooltip",
@@ -272,7 +296,7 @@ suite("LoadingQuickPick tests", () => {
 
       const loadingQuickPick = new LoadingQuickPick({
         name: "loadingQuickPick",
-        placeHolder,
+        placeHolder: placeholder,
         generateItems: () => generatedItems,
         reloadItems: () => [{ label: "reload item" }],
         reloadTooltip: "my reload tooltip",
@@ -282,7 +306,7 @@ suite("LoadingQuickPick tests", () => {
       await showAndAssert(loadingQuickPick, expectedItems, quickPickWithAccept, false, [reloadButton]);
     });
 
-    [
+    for (const pElement of [
       {
         name: "with separate reload function",
         expected: ["reload item"],
@@ -293,7 +317,7 @@ suite("LoadingQuickPick tests", () => {
         expected: ["normal item", "Item 1", "Item 2"],
         reloadItems: undefined,
       },
-    ].forEach((pElement) => {
+    ]) {
       /**
        * Validates that the reload is triggered normally.
        */
@@ -317,7 +341,7 @@ suite("LoadingQuickPick tests", () => {
         const reloadTooltip = "my reload tooltip";
         const loadingQuickPick = new LoadingQuickPick({
           name: "loadingQuickPick",
-          placeHolder,
+          placeHolder: placeholder,
           generateItems: () => generatedItems,
           reloadItems: pElement.reloadItems,
           reloadTooltip,
@@ -333,9 +357,7 @@ suite("LoadingQuickPick tests", () => {
         validateResults(false, titleSet, placeholderSet, busySet, enabledSet);
 
         // get the reload button from all the buttons
-        const foundReloadButton = quickPickWithAccept.buttons
-          .filter((pButton) => pButton.tooltip === reloadTooltip)
-          .shift();
+        const foundReloadButton = quickPickWithAccept.buttons.find((pButton) => pButton.tooltip === reloadTooltip);
         assert.ok(foundReloadButton, "reload button should exist");
 
         // Trigger the reload
@@ -366,7 +388,7 @@ suite("LoadingQuickPick tests", () => {
         debugLog.restore();
         onDidTriggerButtonStub.restore();
       });
-    });
+    }
   });
 });
 
@@ -434,11 +456,11 @@ function validateResults(
   const loadingPlaceholder = placeholderSet.set.withArgs(
     "Please wait, loading is in progress. This might take a while."
   );
-  const placeholder = placeholderSet.set.withArgs(placeHolder);
+  const placeholderCall = placeholderSet.set.withArgs(placeholder);
   Sinon.assert.callOrder(
     ...(duplicate
-      ? [loadingPlaceholder, placeholder, loadingPlaceholder, placeholder]
-      : [loadingPlaceholder, placeholder])
+      ? [loadingPlaceholder, placeholderCall, loadingPlaceholder, placeholderCall]
+      : [loadingPlaceholder, placeholderCall])
   );
 
   // busy asserts

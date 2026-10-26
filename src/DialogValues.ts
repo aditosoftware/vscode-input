@@ -28,7 +28,9 @@ export class DialogValues {
     if (typeof result === "string") {
       elements.push(result);
     } else if (Array.isArray(result)) {
-      result.forEach((pResult) => elements.push(pResult));
+      for (const pResult of result) {
+        elements.push(pResult);
+      }
     } else if (typeof result === "boolean") {
       elements.push(result.toString());
     }

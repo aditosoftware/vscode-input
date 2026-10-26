@@ -87,23 +87,26 @@ export async function generateExampleMultiStepInput(): Promise<void> {
 
   const result = await handleMultiStepInput("Demonstration for inputs", components);
 
-  if (result) {
-    // now, handle the result
+  if (!result) {
+    console.error("No result was present");
+    return;
+  }
 
-    const userName = result.inputValues.get("userName")?.[0];
-    const foodPreferenceLoading = result.inputValues.get("foodPreferenceLoading")?.[0];
-    const chooseAnyFile = result.inputValues.get("chooseAnyFile")?.[0];
-    const chooseTextFile = result.inputValues.get("chooseTextFile")?.[0];
-    const foodPreference = result.inputValues.get("foodPreference")?.[0];
+  // now, handle the result
 
-    // confirmation is also a string, because the boolean of it is transformed
-    const confirmation = result.inputValues.get("Confirmation")?.[0];
+  const username = result.inputValues.get("userName")?.[0];
+  const foodPreferenceLoading = result.inputValues.get("foodPreferenceLoading")?.[0];
+  const chooseAnyFile = result.inputValues.get("chooseAnyFile")?.[0];
+  const chooseTextFile = result.inputValues.get("chooseTextFile")?.[0];
+  const foodPreference = result.inputValues.get("foodPreference")?.[0];
 
-    if (userName && foodPreferenceLoading && chooseAnyFile && chooseTextFile && foodPreference && confirmation) {
-      console.log("all inputs are there");
+  // confirmation is also a string, because the boolean of it is transformed
+  const confirmation = result.inputValues.get("Confirmation")?.[0];
 
-      // now, you can do specific things with your results
-    }
+  if (username && foodPreferenceLoading && chooseAnyFile && chooseTextFile && foodPreference && confirmation) {
+    console.log("all inputs are there");
+
+    // now, you can do specific things with your results
   }
 }
 

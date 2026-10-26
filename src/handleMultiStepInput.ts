@@ -13,6 +13,8 @@ export let logger: Logger;
  * @param pLogger - the logger that should be used for every logging
  */
 export function initializeLogger(pLogger: Logger): void {
+  // This logger needs to be globally assigned. If you want to change it, this would be a breaking change.
+  // eslint-disable-next-line unicorn/no-top-level-assignment-in-function
   logger = pLogger;
 }
 
@@ -31,7 +33,7 @@ export async function handleMultiStepInput(
   inputs: InputBase<InputBaseOptions>[],
   dialogValues?: DialogValues
 ): Promise<DialogValues | undefined> {
-  dialogValues = dialogValues ?? new DialogValues();
+  dialogValues ??= new DialogValues();
 
   let currentStep: Step = { stepNumber: 1, totalNumber: inputs.length };
 
@@ -86,30 +88,32 @@ async function handleInputStep(
     // dispose everything no longer needed from the input
     input.dispose();
 
-    if (typeof result === "undefined") {
+    if (result === undefined) {
       // User canceled the selection
       logger.debug({ message: `Command ${input.inputOptions.name} was cancelled` });
       return;
-    } else if (result === InputAction.BACK) {
+    }
+
+    if (result === InputAction.BACK) {
       // if the back button was pressed, set index and step counter to the last valid used elements
       return handleGoingBack(takenSteps, currentStep, iterator);
-    } else {
-      currentStep.goingBackProcess = false;
-
-      dialogValues.addValue(input.inputOptions.name, result);
-
-      // if there is some special behavior after the input, handle it
-      input.inputOptions.onAfterInput?.(dialogValues);
-
-      // save the last valid step for going back
-      takenSteps.push({
-        stepNumber: currentStep.stepNumber,
-        totalNumber: currentStep.totalNumber,
-        name: input.inputOptions.name,
-      });
-
-      currentStep.stepNumber++;
     }
+
+    currentStep.goingBackProcess = false;
+
+    dialogValues.addValue(input.inputOptions.name, result);
+
+    // if there is some special behavior after the input, handle it
+    input.inputOptions.onAfterInput?.(dialogValues);
+
+    // save the last valid step for going back
+    takenSteps.push({
+      stepNumber: currentStep.stepNumber,
+      totalNumber: currentStep.totalNumber,
+      name: input.inputOptions.name,
+    });
+
+    currentStep.stepNumber++;
   } else if (!currentStep.goingBackProcess) {
     // input not needed, count down total number
     currentStep.totalNumber--;
@@ -118,11 +122,11 @@ async function handleInputStep(
   if (currentStep.goingBackProcess) {
     // if we are going back and skipping, then just go back one more step
     return handleGoingBack(takenSteps, currentStep, iterator);
-  } else {
-    // otherwise, get the next input
-    iterator.next();
-    return currentStep;
   }
+
+  // otherwise, get the next input
+  iterator.next();
+  return currentStep;
 }
 
 /**
@@ -168,9 +172,8 @@ function handleGoingBack(
     }
 
     return lastStep;
-  } else {
-    return currentStep;
   }
+  return currentStep;
 }
 
 /**
