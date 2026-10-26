@@ -45,6 +45,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
+        # full history and all branch refs are needed, so the sonar scanner can
+        # resolve the base branch `main` for the new code period calculation
+        # (otherwise it warns: "Could not find ref 'main' in refs/heads, ...")
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v7.1.0
@@ -74,7 +79,20 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
+          # sonar.sources must be set explicitly when sonar.tests is set,
+          # otherwise the scanner indexes ONLY the test directories and the
+          # eslint report import cannot match any regular source file
+          # ("No input file found for ...")
+          # sonar.exclusions only applies to main (non-test) files, so the test
+          # dirs can be excluded here without affecting the sonar.tests indexing
+          # sonar.tests: explicit test classification instead of the path heuristic
+          # tsconfigPaths: both TS projects must be listed, otherwise only the
+          # root project is analyzed
           args: -Dsonar.projectKey=aditosoftware_vscode-input
             -Dsonar.organization=aditosoftware
             -Dsonar.eslint.reportPaths=eslint-results.json
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*.ttf,**/*.woff,**/*.woff2,**/*.jar,**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.mp4,**/*.vsix,test/**,out/**,dist/**
+            -Dsonar.tests=test/
+            -Dsonar.typescript.tsconfigPaths=tsconfig.json
