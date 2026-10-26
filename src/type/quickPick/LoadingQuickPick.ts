@@ -50,7 +50,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
     const quickPick = vscode.window.createQuickPick();
     quickPick.title = title;
     quickPick.ignoreFocusOut = true;
-    quickPick.canSelectMany = this.inputOptions.allowMultiple ? this.inputOptions.allowMultiple : false;
+    quickPick.canSelectMany = this.inputOptions.allowMultiple ?? false;
     // add a reload button
     const buttons: vscode.QuickInputButton[] = [reloadButton];
     if (showBackButton) {
@@ -143,7 +143,7 @@ export class LoadingQuickPick extends GenericQuickPick<LoadingQuickPick.LoadingQ
     data: QuickPickItems,
     currentResults: DialogValues
   ): void {
-    quickPick.placeholder = this.generatePlaceHolder(data.additionalPlaceholder);
+    quickPick.placeholder = this.generatePlaceholder(data.additionalPlaceholder);
     quickPick.busy = false;
     quickPick.enabled = true;
     quickPick.items = data.items;

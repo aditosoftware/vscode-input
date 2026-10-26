@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "node:assert";
 import { ConfirmationDialog, DialogValues } from "../../src";
 import Sinon from "sinon";
 import * as vscode from "vscode";

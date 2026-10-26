@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "node:assert";
 import { DialogValues } from "../src";
 
 /**
@@ -39,7 +39,10 @@ suite("DialogValues test", () => {
   /**
    * Tests that the adding of different boolean values is working correctly
    */
-  [true, false].forEach((pValue) => {
+  for (const pValue of [true, false]) {
+    /**
+     * Tests that a boolean value can be added.
+     */
     test(`add boolean (${pValue})`, () => {
       const dialogValues = new DialogValues();
 
@@ -48,5 +51,5 @@ suite("DialogValues test", () => {
 
       assert.deepStrictEqual(new Map<string, string[]>([[name, [pValue.toString()]]]), dialogValues.inputValues);
     });
-  });
+  }
 });

@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import Sinon from "sinon";
 import { DialogValues, OpenDialog } from "../../src";
-import assert from "assert";
-import path from "path";
+import assert from "node:assert";
+import path from "node:path";
 
 /**
  * Tests for the OpenDialog.
@@ -44,8 +44,8 @@ suite("OpenDialog tests", () => {
     await openDialog.showDialog(dialogValues, title);
 
     // check that the fsPath is identical in both urls
-    const args = showOpenDialogStub.args[0][0];
-    assert.deepStrictEqual(args.defaultUri.fsPath, value.fsPath);
+    const firstArguments = showOpenDialogStub.args[0][0];
+    assert.deepStrictEqual(firstArguments.defaultUri.fsPath, value.fsPath);
 
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
       canSelectFiles: true,
@@ -75,8 +75,8 @@ suite("OpenDialog tests", () => {
     await openDialog.showDialog(dialogValues, title);
 
     // check that the fsPath is identical in both urls
-    const args = showOpenDialogStub.args[0][0];
-    assert.deepStrictEqual(args.defaultUri.fsPath, value.fsPath);
+    const firstArguments = showOpenDialogStub.args[0][0];
+    assert.deepStrictEqual(firstArguments.defaultUri.fsPath, value.fsPath);
 
     Sinon.assert.calledWithExactly(showOpenDialogStub, {
       title,

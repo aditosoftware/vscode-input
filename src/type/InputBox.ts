@@ -16,6 +16,9 @@ export namespace InputBox {
    * in order to require a placeHolder input for every input box.
    */
   type RequiredInputBoxOptions = BaseInputBoxOptions & {
+    /**
+     * The placeholder that is required for every input box.
+     */
     placeHolder: NonNullable<BaseInputBoxOptions["placeHolder"]>;
   };
 
@@ -141,13 +144,15 @@ export class InputBox extends InputBase<InputBox.InputBoxOptions> {
    * @param inputBox - the input box
    */
   private async validateInput(options: vscode.InputBoxOptions, text: string, inputBox: vscode.InputBox): Promise<void> {
-    if (options.validateInput) {
-      const validationMessage = await options.validateInput(text);
-      if (validationMessage) {
-        inputBox.validationMessage = validationMessage;
-      } else {
-        inputBox.validationMessage = undefined;
-      }
+    if (!options.validateInput) {
+      return;
+    }
+
+    const validationMessage = await options.validateInput(text);
+    if (validationMessage) {
+      inputBox.validationMessage = validationMessage;
+    } else {
+      inputBox.validationMessage = undefined;
     }
   }
 }

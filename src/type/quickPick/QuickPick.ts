@@ -31,7 +31,7 @@ export class QuickPick extends GenericQuickPick<QuickPick.QuickPickOptions> {
 
     const quickPick = vscode.window.createQuickPick();
     quickPick.title = title;
-    quickPick.placeholder = this.generatePlaceHolder(items.additionalPlaceholder);
+    quickPick.placeholder = this.generatePlaceholder(items.additionalPlaceholder);
     quickPick.canSelectMany = this.inputOptions.allowMultiple ?? false;
     quickPick.items = items.items;
     quickPick.ignoreFocusOut = this.inputOptions.ignoreFocusOut ?? false;
